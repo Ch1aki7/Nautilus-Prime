@@ -381,7 +381,7 @@ if __name__ == "__main__":
 
 可以看到K230自带媒体库还是比lvgl简洁不少，可行性也挺高的
 
-写一下初始界面
+### 写一下初始界面
 
 ```python
 try:
@@ -426,7 +426,86 @@ try:
 
 ![image-20250913171401651](README.assets/image-20250913171401651.png)
 
-接下来可以进行控件的添加
+之后把2、3、4的情况添加完毕
+
+### 进行输入功能的制作
+
+首先要加几个全局变量
+
+```
+        input_text = ""
+        key_chosen_flag = True
+        flag = 2 # 当前在哪个模式里 -1为初始
+        key_chosen=20 # 输入界面里的键位选择
+```
+
+制作输入框
+
+```python
+# 进入查找模式
+if flag == 2:
+    img.clear()
+    # 绘制输入框
+    img.draw_rectangle(160, 10, 500, 50, color=(255, 255, 255), thickness=2)
+    img.draw_string_advanced(40, 10, 45, "Input:", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+    img.draw_string_advanced(170, 10, 40, "text", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+```
+
+制作键盘
+
+```python
+# QWERTY键盘布局
+keys = [
+    "QWERTYUIOP",
+    "ASDFGHJKL",
+    "ZXCVBNM"
+]
+key_width = 60
+key_height = 60
+margin = 10
+count=0
+for row, key_row in enumerate(keys):
+    for col, the_key in enumerate(key_row):
+        if count!=19:
+            count+=1
+        else:
+            count+=2
+
+            x = col * (key_width + margin) + 10 + row*10
+            y = row * (key_height + margin) + 270
+            if key_chosen==count:
+                img.draw_rectangle(x, y, key_width, key_height, color=(255, 255, 255),fill=True)
+                img.draw_string(x + 5, y + 5, the_key, color=(0, 0, 0), scale=2)
+            else:
+                img.draw_rectangle(x, y, key_width, key_height, color=(255, 255, 255))
+                img.draw_string(x + 5, y + 5, the_key, color=(255, 255, 255), scale=2)
+      del keys
+      gc.collect()
+```
+
+```python
+# 制作功能键 一二三行末尾分别是：(710,270)(650，340)(520，410)
+if key_chosen==20:
+    img.draw_rectangle(650, 340, 120, key_height, color=(255, 255, 255),fill=True)
+    #img.draw_string(650, 340, "Random", color=(0, 0, 0), scale=2)
+    img.draw_string_advanced(660, 340, 30,"Random", color=(0, 0, 0), font="/sdcard/res/font/ChillBitmap7x.ttf")
+else:
+    img.draw_rectangle(650, 340, 120, key_height, color=(255, 255, 255))
+    img.draw_string_advanced(660, 340, 30,"Random", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+    if key_chosen == 28:
+        img.draw_rectangle(520, 410, 190, key_height, color=(255, 255, 255), fill=True)
+        img.draw_string_advanced(530, 410, 30, "<- Backspace", color=(0, 0, 0), font="/sdcard/res/font/ChillBitmap7x.ttf")
+    else:
+        img.draw_rectangle(520, 410, 190, key_height, color=(255, 255, 255))
+        img.draw_string_advanced(530, 410, 30, "<- Backspace", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+```
+
+成品如图
+
+![image-20250913204254426](README.assets/image-20250913204254426.png)
+
+
 
 ## timer定时器回调函数
 
