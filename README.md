@@ -178,6 +178,15 @@ def user_gui_init():
     btn.add_event(btn_clicked_event, lv.EVENT.CLICKED, None)
 ```
 
+创建开关组件+事件
+
+```
+    ui_Switch1 = lv.switch(lv.scr_act())
+    ui_Switch1.set_width(500)
+    ui_Switch1.set_height(250)
+    ui_Switch1.set_align( lv.ALIGN.CENTER)
+```
+
 之后根据需要编写事件函数
 
 ```
@@ -294,5 +303,138 @@ def lvgl_deinit():
     lv.deinit()           # 反初始化 LVGL
     del disp_img1         # 释放缓冲区 1
     del disp_img2         # 释放缓冲区 2   
+```
+
+666官网几万个API还全是C不适配micropythonIDE，得自己猜怎么用，找个函数找一万年还没有代码补全，跑路了
+
+![image-20250913123116585](README.assets/image-20250913123116585.png)
+
+## 板自带媒体库
+
+大道至简，先根据手册写一个包含画布的基础程序
+
+```
+from media.display import * 
+from media.media import * 
+import time, os, sys, gc, urandom     
+import lvgl as lv  
+from machine import TOUCH 
+
+DISPLAY_WIDTH = ALIGN_UP(800, 16)  # 800 对齐后仍为 800（800 % 16 = 0）
+DISPLAY_HEIGHT = 480               # 固定高度 480
+
+# def display_init():
+#     Display.init(Display.ST7701, width = DISPLAY_WIDTH, height = DISPLAY_HEIGHT, to_ide = True)
+#     MediaManager.init()
+
+# def display_deinit():
+#     os.exitpoint(os.EXITPOINT_ENABLE_SLEEP)  # 启用系统休眠出口点
+#     time.sleep_ms(50)                        # 延迟 50ms 等待资源释放
+#     Display.deinit()                         # 关闭显示驱动
+#     MediaManager.deinit()                    # 释放媒体资源（缓冲区等）
+
+def display_test():
+    print("display test")
+
+    img = image.Image(DISPLAY_WIDTH, DISPLAY_HEIGHT, image.ARGB8888)
+
+    Display.init(Display.ST7701, width = DISPLAY_WIDTH, height = DISPLAY_HEIGHT, to_ide = True)
+    MediaManager.init()
+
+    try:
+        while True:
+            img.clear()
+            for i in range(10):
+                x = (urandom.getrandbits(11) % img.width())
+                y = (urandom.getrandbits(11) % img.height())
+                r = (urandom.getrandbits(8))
+                g = (urandom.getrandbits(8))
+                b = (urandom.getrandbits(8))
+                size = (urandom.getrandbits(30) % 64) + 32
+                img.draw_string_advanced(x,y,size, "妈的忍不了跟小学期爆了！！！", color = (r, g, b),)
+
+            # draw result to screen
+            Display.show_image(img)
+
+            time.sleep(1)
+            os.exitpoint()
+    except KeyboardInterrupt as e:
+        print("user stop: ", e)
+    except BaseException as e:
+        print(f"Exception {e}")
+
+    # deinit display
+    Display.deinit()
+    os.exitpoint(os.EXITPOINT_ENABLE_SLEEP)
+    time.sleep_ms(100)
+    # release media buffer
+    MediaManager.deinit()
+
+if __name__ == "__main__":
+    os.exitpoint(os.EXITPOINT_ENABLE)
+    display_test()
+```
+
+效果如图：
+
+![image-20250913141741146](README.assets/image-20250913141741146.png)
+
+可以看到K230自带媒体库还是比lvgl简洁不少，可行性也挺高的
+
+写一下初始界面
+
+```python
+try:
+    menu_collect = 1
+    chosen_color = 0
+
+    while True:
+        img.clear()
+        img.draw_string_advanced(95, 25, 80, "NAUTILUS-PRIME", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+        img.draw_string_advanced(265, 385, 30, "Press Any Key to Start", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+        img.draw_string_advanced(225, 425, 40, "Presented by Zaphkiel", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+        chosen_color=255-chosen_color
+
+        # 选中视觉效果
+        if menu_collect == 1:
+            img.draw_rectangle(110 , 150, 180, 100, color=(chosen_color, chosen_color, chosen_color), fill=True)
+            img.draw_string_advanced(118, 150, 45, "Pokemon", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
+            img.draw_string_advanced(119, 180, 53, "Detect", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
+            img.draw_rectangle(110, 150, 180, 100,color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
+
+            img.draw_rectangle(110, 280, 180, 100, color=(255, 255, 255), thickness=2)
+            img.draw_string_advanced(119, 280, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+            img.draw_string_advanced(119, 310, 53, "Browse", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+            img.draw_rectangle(510, 150, 180, 100, color=(255, 255, 255), thickness=2)
+            img.draw_string_advanced(519, 150, 50, "Sheikah", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+            img.draw_string_advanced(519, 185, 50, "  Stone", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+            img.draw_rectangle(510, 280, 180, 100, color=(255, 255, 255), thickness=2)
+            img.draw_string_advanced(519, 270, 53, "Super", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+            img.draw_string_advanced(519, 320, 53, "  Earth", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+            Display.show_image(img)
+            Display.show_image(src_img,x=350,y=200,layer = Display.LAYER_OSD1)
+
+            time.sleep(0.5)
+            os.exitpoint()
+```
+
+调参数调一年，效果如下，默认选中槽位有闪烁效果
+
+![image-20250913171401651](README.assets/image-20250913171401651.png)
+
+接下来可以进行控件的添加
+
+## timer定时器回调函数
+
+```
+# 创建软件定时器，index=-1表示软件定时器
+tim = Timer(-1)
+
+# 初始化定时器为周期模式，每隔500ms调用一次led_toggle回调函数
+tim.init(period=500, mode=Timer.PERIODIC, callback=led_toggle)
 ```
 
