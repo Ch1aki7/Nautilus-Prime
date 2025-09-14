@@ -13,10 +13,18 @@ DISPLAY_HEIGHT = 480               # 固定高度 480
 
 can_touch = 1;
 
-def init_uart():
-    fpioa = FPIOA()
+sensor_id = 2
+sensor = None
 
-    fpioa.set_function()
+#def init_uart():
+fpioa = FPIOA()
+
+# 上下左右中
+fpioa.set_function(32, FPIOA.GPIO32)
+fpioa.set_function(42, FPIOA.GPIO42)
+fpioa.set_function(35, FPIOA.GPIO35)
+fpioa.set_function(34, FPIOA.GPIO34)
+fpioa.set_function(33, FPIOA.GPIO33)
 
 # def display_init():
 #     Display.init(Display.ST7701, width = DISPLAY_WIDTH, height = DISPLAY_HEIGHT, to_ide = True)
@@ -34,7 +42,7 @@ def timer_callback(t):
 
 def display_test():
     print("display test")
-
+    #init_uart()
     # 2查询功能的变量数组
     labels=['abra', 'aerodactyl', 'alakazam', 'arbok', 'arcanine', 'articuno', 'beedrill', 'bellsprout', 'blastoise', 'bulbasaur', 'butterfree', 'caterpie', 'chansey', 'charizard', 'charmander', 'charmeleon', 'clefable', 'clefairy', 'cloyster', 'cubone', 'dewgong', 'diglett', 'ditto', 'dodrio', 'doduo', 'dragonair', 'dragonite', 'dratini', 'drowzee', 'dugtrio', 'eevee', 'ekans', 'electabuzz', 'electrode', 'exeggcute', 'exeggutor', 'farfetchd', 'fearow', 'flareon', 'gastly', 'gengar', 'geodude', 'gloom', 'golbat', 'goldeen', 'golduck', 'golem', 'graveler', 'grimer', 'growlithe', 'gyarados', 'haunter', 'hitmonchan', 'hitmonlee', 'horsea', 'hypno', 'ivysaur', 'jigglypuff', 'jolteon', 'jynx', 'kabuto', 'kabutops', 'kadabra', 'kakuna', 'kangaskhan', 'kingler', 'koffing', 'krabby', 'lapras', 'lickitung', 'machamp', 'machoke', 'machop', 'magikarp', 'magmar', 'magnemite', 'magneton', 'mankey', 'marowak', 'meowth', 'metapod', 'mew', 'mewtwo', 'moltres', 'mr-mime', 'muk', 'nidoking', 'nidoqueen', 'nidoran-f', 'nidoran-m', 'nidorina', 'nidorino', 'ninetales', 'oddish', 'omanyte', 'omastar', 'onix', 'paras', 'parasect', 'persian', 'pidgeot', 'pidgeotto', 'pidgey', 'pikachu', 'pinsir', 'poliwag', 'poliwhirl', 'poliwrath', 'ponyta', 'porygon', 'primeape', 'psyduck', 'raichu', 'rapidash', 'raticate', 'rattata', 'rhydon', 'rhyhorn', 'sandshrew', 'sandslash', 'scyther', 'seadra', 'seaking', 'seel', 'shellder', 'slowbro', 'slowpoke', 'snorlax', 'spearow', 'squirtle', 'starmie', 'staryu', 'tangela', 'tauros', 'tentacool', 'tentacruel', 'vaporeon', 'venomoth', 'venonat', 'venusaur', 'victreebel', 'vileplume', 'voltorb', 'vulpix', 'wartortle', 'weedle', 'weepinbell', 'weezing', 'wigglytuff', 'zapdos', 'zubat']
     pokemon_linkname=['bulbasaur', 'ivysaur', 'venusaur', 'charmander', 'charmeleon', 'charizard', 'squirtle', 'wartortle', 'blastoise', 'caterpie', 'metapod', 'butterfree', 'weedle', 'kakuna', 'beedrill', 'pidgey', 'pidgeotto', 'pidgeot', 'rattata', 'raticate', 'spearow', 'fearow', 'ekans', 'arbok', 'pikachu', 'raichu', 'sandshrew', 'sandslash', 'nidoran-f', 'nidorina', 'nidoqueen', 'nidoran-m', 'nidorino', 'nidoking', 'clefairy', 'clefable', 'vulpix', 'ninetales', 'jigglypuff', 'wigglytuff', 'zubat', 'golbat', 'oddish', 'gloom', 'vileplume', 'paras', 'parasect', 'venonat', 'venomoth', 'diglett', 'dugtrio', 'meowth', 'persian', 'psyduck', 'golduck', 'mankey', 'primeape', 'growlithe', 'arcanine', 'poliwag', 'poliwhirl', 'poliwrath', 'abra', 'kadabra', 'alakazam', 'machop', 'machoke', 'machamp', 'bellsprout', 'weepinbell', 'victreebel', 'tentacool', 'tentacruel', 'geodude', 'graveler', 'golem', 'ponyta', 'rapidash', 'slowpoke', 'slowbro', 'magnemite', 'magneton', 'farfetchd', 'doduo', 'dodrio', 'seel', 'dewgong', 'grimer', 'muk', 'shellder', 'cloyster', 'gastly', 'haunter', 'gengar', 'onix', 'drowzee', 'hypno', 'krabby', 'kingler', 'voltorb', 'electrode', 'exeggcute', 'exeggutor', 'cubone', 'marowak', 'hitmonlee', 'hitmonchan', 'lickitung', 'koffing', 'weezing', 'rhyhorn', 'rhydon', 'chansey', 'tangela', 'kangaskhan', 'horsea', 'seadra', 'goldeen', 'seaking', 'staryu', 'starmie', 'mr-mime', 'scyther', 'jynx', 'electabuzz', 'magmar', 'pinsir', 'tauros', 'magikarp', 'gyarados', 'lapras', 'ditto', 'eevee', 'vaporeon', 'jolteon', 'flareon', 'porygon', 'omanyte', 'omastar', 'kabuto', 'kabutops', 'aerodactyl', 'snorlax', 'articuno', 'zapdos', 'moltres', 'dratini', 'dragonair', 'dragonite', 'mewtwo', 'mew', 'chikorita', 'bayleef', 'meganium', 'cyndaquil', 'quilava', 'typhlosion', 'totodile', 'croconaw', 'feraligatr', 'sentret', 'furret', 'hoothoot', 'noctowl', 'ledyba', 'ledian', 'spinarak', 'ariados', 'crobat', 'chinchou', 'lanturn', 'pichu', 'cleffa', 'igglybuff', 'togepi', 'togetic', 'natu', 'xatu', 'mareep', 'flaaffy', 'ampharos', 'bellossom', 'marill', 'azumarill', 'sudowoodo', 'politoed', 'hoppip', 'skiploom', 'jumpluff', 'aipom', 'sunkern', 'sunflora', 'yanma', 'wooper', 'quagsire', 'espeon', 'umbreon', 'murkrow', 'slowking', 'misdreavus', 'unown', 'wobbuffet', 'girafarig', 'pineco', 'forretress', 'dunsparce', 'gligar', 'steelix', 'snubbull', 'granbull', 'qwilfish', 'scizor', 'shuckle', 'heracross', 'sneasel', 'teddiursa', 'ursaring', 'slugma', 'magcargo', 'swinub', 'piloswine', 'corsola', 'remoraid', 'octillery', 'delibird', 'mantine', 'skarmory', 'houndour', 'houndoom', 'kingdra', 'phanpy', 'donphan', 'porygon2', 'stantler', 'smeargle', 'tyrogue', 'hitmontop', 'smoochum', 'elekid', 'magby', 'miltank', 'blissey', 'raikou', 'entei', 'suicune', 'larvitar', 'pupitar', 'tyranitar', 'lugia', 'ho-oh', 'celebi', 'treecko', 'grovyle', 'sceptile', 'torchic', 'combusken', 'blaziken', 'mudkip', 'marshtomp', 'swampert', 'poochyena', 'mightyena', 'zigzagoon', 'linoone', 'wurmple', 'silcoon', 'beautifly', 'cascoon', 'dustox', 'lotad', 'lombre', 'ludicolo', 'seedot', 'nuzleaf', 'shiftry', 'taillow', 'swellow', 'wingull', 'pelipper', 'ralts', 'kirlia', 'gardevoir', 'surskit', 'masquerain', 'shroomish', 'breloom', 'slakoth', 'vigoroth', 'slaking', 'nincada', 'ninjask', 'shedinja', 'whismur', 'loudred', 'exploud', 'makuhita', 'hariyama', 'azurill', 'nosepass', 'skitty', 'delcatty', 'sableye', 'mawile', 'aron', 'lairon', 'aggron', 'meditite', 'medicham', 'electrike', 'manectric', 'plusle', 'minun', 'volbeat', 'illumise', 'roselia', 'gulpin', 'swalot', 'carvanha', 'sharpedo', 'wailmer', 'wailord', 'numel', 'camerupt', 'torkoal', 'spoink', 'grumpig', 'spinda', 'trapinch', 'vibrava', 'flygon', 'cacnea', 'cacturne', 'swablu', 'altaria', 'zangoose', 'seviper', 'lunatone', 'solrock', 'barboach', 'whiscash', 'corphish', 'crawdaunt', 'baltoy', 'claydol', 'lileep', 'cradily', 'anorith', 'armaldo', 'feebas', 'milotic', 'castform', 'kecleon', 'shuppet', 'banette', 'duskull', 'dusclops', 'tropius', 'chimecho', 'absol', 'wynaut', 'snorunt', 'glalie', 'spheal', 'sealeo', 'walrein', 'clamperl', 'huntail', 'gorebyss', 'relicanth', 'luvdisc', 'bagon', 'shelgon', 'salamence', 'beldum', 'metang', 'metagross', 'regirock', 'regice', 'registeel', 'latias', 'latios', 'kyogre', 'groudon', 'rayquaza', 'jirachi', 'deoxys', 'turtwig', 'grotle', 'torterra', 'chimchar', 'monferno', 'infernape', 'piplup', 'prinplup', 'empoleon', 'starly', 'staravia', 'staraptor', 'bidoof', 'bibarel', 'kricketot', 'kricketune', 'shinx', 'luxio', 'luxray', 'budew', 'roserade', 'cranidos', 'rampardos', 'shieldon', 'bastiodon', 'burmy', 'wormadam', 'mothim', 'combee', 'vespiquen', 'pachirisu', 'buizel', 'floatzel', 'cherubi', 'cherrim', 'shellos', 'gastrodon', 'ambipom', 'drifloon', 'drifblim', 'buneary', 'lopunny', 'mismagius', 'honchkrow', 'glameow', 'purugly', 'chingling', 'stunky', 'skuntank', 'bronzor', 'bronzong', 'bonsly', 'mime-jr', 'happiny', 'chatot', 'spiritomb', 'gible', 'gabite', 'garchomp', 'munchlax', 'riolu', 'lucario', 'hippopotas', 'hippowdon', 'skorupi', 'drapion', 'croagunk', 'toxicroak', 'carnivine', 'finneon', 'lumineon', 'mantyke', 'snover', 'abomasnow', 'weavile', 'magnezone', 'lickilicky', 'rhyperior', 'tangrowth', 'electivire', 'magmortar', 'togekiss', 'yanmega', 'leafeon', 'glaceon', 'gliscor', 'mamoswine', 'porygon-z', 'gallade', 'probopass', 'dusknoir', 'froslass', 'rotom', 'uxie', 'mesprit', 'azelf', 'dialga', 'palkia', 'heatran', 'regigigas', 'giratina', 'cresselia', 'phione', 'manaphy', 'darkrai', 'shaymin', 'arceus', 'victini', 'snivy', 'servine', 'serperior', 'tepig', 'pignite', 'emboar', 'oshawott', 'dewott', 'samurott', 'patrat', 'watchog', 'lillipup', 'herdier', 'stoutland', 'purrloin', 'liepard', 'pansage', 'simisage', 'pansear', 'simisear', 'panpour', 'simipour', 'munna', 'musharna', 'pidove', 'tranquill', 'unfezant', 'blitzle', 'zebstrika', 'roggenrola', 'boldore', 'gigalith', 'woobat', 'swoobat', 'drilbur', 'excadrill', 'audino', 'timburr', 'gurdurr', 'conkeldurr', 'tympole', 'palpitoad', 'seismitoad', 'throh', 'sawk', 'sewaddle', 'swadloon', 'leavanny', 'venipede', 'whirlipede', 'scolipede', 'cottonee', 'whimsicott', 'petilil', 'lilligant', 'basculin', 'sandile', 'krokorok', 'krookodile', 'darumaka', 'darmanitan', 'maractus', 'dwebble', 'crustle', 'scraggy', 'scrafty', 'sigilyph', 'yamask', 'cofagrigus', 'tirtouga', 'carracosta', 'archen', 'archeops', 'trubbish', 'garbodor', 'zorua', 'zoroark', 'minccino', 'cinccino', 'gothita', 'gothorita', 'gothitelle', 'solosis', 'duosion', 'reuniclus', 'ducklett', 'swanna', 'vanillite', 'vanillish', 'vanilluxe', 'deerling', 'sawsbuck', 'emolga', 'karrablast', 'escavalier', 'foongus', 'amoonguss', 'frillish', 'jellicent', 'alomomola', 'joltik', 'galvantula', 'ferroseed', 'ferrothorn', 'klink', 'klang', 'klinklang', 'tynamo', 'eelektrik', 'eelektross', 'elgyem', 'beheeyem', 'litwick', 'lampent', 'chandelure', 'axew', 'fraxure', 'haxorus', 'cubchoo', 'beartic', 'cryogonal', 'shelmet', 'accelgor', 'stunfisk', 'mienfoo', 'mienshao', 'druddigon', 'golett', 'golurk', 'pawniard', 'bisharp', 'bouffalant', 'rufflet', 'braviary', 'vullaby', 'mandibuzz', 'heatmor', 'durant', 'deino', 'zweilous', 'hydreigon', 'larvesta', 'volcarona', 'cobalion', 'terrakion', 'virizion', 'tornadus', 'thundurus', 'reshiram', 'zekrom', 'landorus', 'kyurem', 'keldeo', 'meloetta', 'genesect', 'chespin', 'quilladin', 'chesnaught', 'fennekin', 'braixen', 'delphox', 'froakie', 'frogadier', 'greninja', 'bunnelby', 'diggersby', 'fletchling', 'fletchinder', 'talonflame', 'scatterbug', 'spewpa', 'vivillon', 'litleo', 'pyroar', 'flabebe', 'floette', 'florges', 'skiddo', 'gogoat', 'pancham', 'pangoro', 'furfrou', 'espurr', 'meowstic', 'honedge', 'doublade', 'aegislash', 'spritzee', 'aromatisse', 'swirlix', 'slurpuff', 'inkay', 'malamar', 'binacle', 'barbaracle', 'skrelp', 'dragalge', 'clauncher', 'clawitzer', 'helioptile', 'heliolisk', 'tyrunt', 'tyrantrum', 'amaura', 'aurorus', 'sylveon', 'hawlucha', 'dedenne', 'carbink', 'goomy', 'sliggoo', 'goodra', 'klefki', 'phantump', 'trevenant', 'pumpkaboo', 'gourgeist', 'bergmite', 'avalugg', 'noibat', 'noivern', 'xerneas', 'yveltal', 'zygarde', 'diancie', 'hoopa', 'volcanion', 'rowlet', 'dartrix', 'decidueye', 'litten', 'torracat', 'incineroar', 'popplio', 'brionne', 'primarina', 'pikipek', 'trumbeak', 'toucannon', 'yungoos', 'gumshoos', 'grubbin', 'charjabug', 'vikavolt', 'crabrawler', 'crabominable', 'oricorio', 'cutiefly', 'ribombee', 'rockruff', 'lycanroc', 'wishiwashi', 'mareanie', 'toxapex', 'mudbray', 'mudsdale', 'dewpider', 'araquanid', 'fomantis', 'lurantis', 'morelull', 'shiinotic', 'salandit', 'salazzle', 'stufful', 'bewear', 'bounsweet', 'steenee', 'tsareena', 'comfey', 'oranguru', 'passimian', 'wimpod', 'golisopod', 'sandygast', 'palossand', 'pyukumuku', 'type-null', 'silvally', 'minior', 'komala', 'turtonator', 'togedemaru', 'mimikyu', 'bruxish', 'drampa', 'dhelmise', 'jangmo-o', 'hakamo-o', 'kommo-o', 'tapu-koko', 'tapu-lele', 'tapu-bulu', 'tapu-fini', 'cosmog', 'cosmoem', 'solgaleo', 'lunala', 'nihilego', 'buzzwole', 'pheromosa', 'xurkitree', 'celesteela', 'kartana', 'guzzlord', 'necrozma', 'magearna', 'marshadow', 'poipole', 'naganadel', 'stakataka', 'blacephalon', 'zeraora', 'meltan', 'melmetal', 'grookey', 'thwackey', 'rillaboom', 'scorbunny', 'raboot', 'cinderace', 'sobble', 'drizzile', 'inteleon', 'skwovet', 'greedent', 'rookidee', 'corvisquire', 'corviknight', 'blipbug', 'dottler', 'orbeetle', 'nickit', 'thievul', 'gossifleur', 'eldegoss', 'wooloo', 'dubwool', 'chewtle', 'drednaw', 'yamper', 'boltund', 'rolycoly', 'carkol', 'coalossal', 'applin', 'flapple', 'appletun', 'silicobra', 'sandaconda', 'cramorant', 'arrokuda', 'barraskewda', 'toxel', 'toxtricity', 'sizzlipede', 'centiskorch', 'clobbopus', 'grapploct', 'sinistea', 'polteageist', 'hatenna', 'hattrem', 'hatterene', 'impidimp', 'morgrem', 'grimmsnarl', 'obstagoon', 'perrserker', 'cursola', 'sirfetchd', 'mr-rime', 'runerigus', 'milcery', 'alcremie', 'falinks', 'pincurchin', 'snom', 'frosmoth', 'stonjourner', 'eiscue', 'indeedee', 'morpeko', 'cufant', 'copperajah', 'dracozolt', 'arctozolt', 'dracovish', 'arctovish', 'duraludon', 'dreepy', 'drakloak', 'dragapult', 'zacian', 'zamazenta', 'eternatus', 'kubfu', 'urshifu', 'zarude', 'regieleki', 'regidrago', 'glastrier', 'spectrier', 'calyrex', 'wyrdeer', 'kleavor', 'ursaluna', 'basculegion', 'sneasler', 'overqwil', 'enamorus', 'sprigatito', 'floragato', 'meowscarada', 'fuecoco', 'crocalor', 'skeledirge', 'quaxly', 'quaxwell', 'quaquaval', 'lechonk', 'oinkologne', 'tarountula', 'spidops', 'nymble', 'lokix', 'pawmi', 'pawmo', 'pawmot', 'tandemaus', 'maushold', 'fidough', 'dachsbun', 'smoliv', 'dolliv', 'arboliva', 'squawkabilly', 'nacli', 'naclstack', 'garganacl', 'charcadet', 'armarouge', 'ceruledge', 'tadbulb', 'bellibolt', 'wattrel', 'kilowattrel', 'maschiff', 'mabosstiff', 'shroodle', 'grafaiai', 'bramblin', 'brambleghast', 'toedscool', 'toedscruel', 'klawf', 'capsakid', 'scovillain', 'rellor', 'rabsca', 'flittle', 'espathra', 'tinkatink', 'tinkatuff', 'tinkaton', 'wiglett', 'wugtrio', 'bombirdier', 'finizen', 'palafin', 'varoom', 'revavroom', 'cyclizar', 'orthworm', 'glimmet', 'glimmora', 'greavard', 'houndstone', 'flamigo', 'cetoddle', 'cetitan', 'veluza', 'dondozo', 'tatsugiri', 'annihilape', 'clodsire', 'farigiraf', 'dudunsparce', 'kingambit', 'great-tusk', 'scream-tail', 'brute-bonnet', 'flutter-mane', 'slither-wing', 'sandy-shocks', 'iron-treads', 'iron-bundle', 'iron-hands', 'iron-jugulis', 'iron-moth', 'iron-thorns', 'frigibax', 'arctibax', 'baxcalibur', 'gimmighoul', 'gholdengo', 'wo-chien', 'chien-pao', 'ting-lu', 'chi-yu', 'roaring-moon', 'iron-valiant', 'koraidon', 'miraidon', 'walking-wake', 'iron-leaves', 'dipplin', 'poltchageist', 'sinistcha', 'okidogi', 'munkidori', 'fezandipiti', 'ogerpon', 'archaludon', 'hydrapple', 'gouging-fire', 'raging-bolt', 'iron-boulder', 'iron-crown', 'terapagos', 'pecharunt']
@@ -44,16 +52,31 @@ def display_test():
 
     img = image.Image(DISPLAY_WIDTH, DISPLAY_HEIGHT, image.RGB565)
     src_img = image.Image("/data/pokedex.bmp")
-    # sensor = Sensor()
-    # sensor.reset()
+
+    # sensor加载
+    sensor = Sensor()
+    sensor.reset()
+    sensor.set_framesize(width=DISPLAY_WIDTH, height=DISPLAY_HEIGHT, chn=CAM_CHN_ID_0)
+    sensor.set_pixformat(Sensor.RGB565, chn=CAM_CHN_ID_0)
+    
     Display.init(Display.ST7701, width = DISPLAY_WIDTH, height = DISPLAY_HEIGHT, to_ide = True)
     MediaManager.init()
 
+    
 
     try:
+        # 按键实例化
+        key1 = Pin(32, Pin.IN, pull=Pin.PULL_UP, drive=7) # 上
+        key2 = Pin(42, Pin.IN, pull=Pin.PULL_UP, drive=7) # 下
+        key3 = Pin(35, Pin.IN, pull=Pin.PULL_UP, drive=7) # 左
+        key4 = Pin(34, Pin.IN, pull=Pin.PULL_UP, drive=7) # 右
+        key5 = Pin(33, Pin.IN, pull=Pin.PULL_UP, drive=7) # 中
 
-        key = Pin(62, Pin.OUT, pull=Pin.PULL_NONE, drive=7)
-
+        last_key_state1=1
+        last_key_state2=1
+        last_key_state3=1
+        last_key_state4=1
+        last_key_state5=1
 
         menu_collect = 3 # 当前选中哪个模式
         chosen_color = 0
@@ -71,113 +94,126 @@ def display_test():
         tim = Timer(-1)
         tim.init(period=1000, mode=Timer.PERIODIC, callback=timer_callback)
 
+
+        # 使用IDE的帧缓冲区作为显示输出
+        Display.init(Display.VIRT, width=1920, height=1080, to_ide=True)
+
         while True:
-            p = tp.read()
-            if p != () and can_touch == 1:
-                can_touch = 0
-                if p[0].x > 110 and p[0].x < 290 and p[0].y > 150 and p[0].y < 250:
-                    if menu_collect != 1:
-                        menu_collect = 1
-                    else:
-                        flag = 1
-                if p[0].x > 110 and p[0].x < 290 and p[0].y > 280 and p[0].y < 380:
-                    if menu_collect != 2:
-                        menu_collect = 2
-                    else:
-                        flag = 2
-                if p[0].x > 510 and p[0].x < 690 and p[0].y > 150 and p[0].y < 250:
-                    if menu_collect != 3:
-                        menu_collect = 3
-                    else:
-                        flag = 3
-                if p[0].x > 510 and p[0].x < 690 and p[0].y > 280 and p[0].y < 380:
-                    if menu_collect != 4:
-                        menu_collect = 4
-                    else:
-                        flag = 4
+            # 实时获取按键
+            current_key_state1 = key1.value()
+            current_key_state2 = key2.value()
+            current_key_state3 = key3.value()
+            current_key_state4 = key4.value()
+            current_key_state5 = key5.value()
 
-            img.clear()
-            img.draw_string_advanced(95, 25, 80, "NAUTILUS-PRIME", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-            img.draw_string_advanced(265, 385, 30, "Press Any Key to Start", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-            img.draw_string_advanced(225, 425, 40, "Presented by Zaphkiel", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-            img.draw_image(src_img, 310, 170, 1.5, 1.5,alpha=256)
-            #暂时无效，原因未知，只能用Display
-            #改变了img通道后完全解决
-            #if flag == -1:
-                #Display.show_image(src_img,x=350,y=200,layer = Display.LAYER_OSD1)
+            #主界面
+            if flag == -1:
+                img.clear()
+                img.draw_string_advanced(95, 25, 80, "NAUTILUS-PRIME", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(265, 385, 30, "Press Any Key to Start", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(225, 425, 40, "Presented by Zaphkiel", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_image(src_img, 310, 170, 1.5, 1.5,alpha=256)
+                #暂时无效，原因未知，只能用Display
+                #改变了img通道后完全解决
+                #if flag == -1:
+                    #Display.show_image(src_img,x=350,y=200,layer = Display.LAYER_OSD1)
 
+                # 触摸控制
+                p = tp.read()
+                if p != () and can_touch == 1:
+                    can_touch = 0
+                    if p[0].x > 110 and p[0].x < 290 and p[0].y > 150 and p[0].y < 250:
+                        if menu_collect != 1:
+                            menu_collect = 1
+                        else:
+                            flag = 1
+                    if p[0].x > 110 and p[0].x < 290 and p[0].y > 280 and p[0].y < 380:
+                        if menu_collect != 2:
+                            menu_collect = 2
+                        else:
+                            flag = 2
+                    if p[0].x > 510 and p[0].x < 690 and p[0].y > 150 and p[0].y < 250:
+                        if menu_collect != 3:
+                            menu_collect = 3
+                        else:
+                            flag = 3
+                    if p[0].x > 510 and p[0].x < 690 and p[0].y > 280 and p[0].y < 380:
+                        if menu_collect != 4:
+                            menu_collect = 4
+                        else:
+                            flag = 4
 
-            chosen_color=255-chosen_color
+                chosen_color=255
 
-            # 选中视觉效果
-            if menu_collect == 1:
-                img.draw_rectangle(110 , 150, 180, 100, color=(chosen_color, chosen_color, chosen_color), fill=True)
-                img.draw_string_advanced(118, 150, 45, "Pokemon", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(119, 180, 53, "Detect", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_rectangle(110, 150, 180, 100,color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
+                # 选中视觉效果
+                if menu_collect == 1:
+                    img.draw_rectangle(110 , 150, 180, 100, color=(chosen_color, chosen_color, chosen_color), fill=True)
+                    img.draw_string_advanced(118, 150, 45, "Pokemon", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(119, 180, 53, "Detect", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(110, 150, 180, 100,color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
 
-                img.draw_rectangle(110, 280, 180, 100, color=(255, 255, 255), thickness=2)
-                img.draw_string_advanced(119, 280, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(119, 310, 53, "Browse", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(110, 280, 180, 100, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(119, 280, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(119, 310, 53, "Browse", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
-                img.draw_rectangle(510, 150, 180, 100, color=(255, 255, 255), thickness=2)
-                img.draw_string_advanced(519, 150, 50, "Sheikah", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(519, 185, 50, "  Stone", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(510, 150, 180, 100, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 150, 50, "Sheikah", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(519, 185, 50, "  Stone", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
-                img.draw_rectangle(510, 280, 180, 100, color=(255, 255, 255), thickness=2)
-                img.draw_string_advanced(519, 270, 53, "Super", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(519, 320, 53, "  Earth", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-            elif menu_collect==2:
-                img.draw_rectangle(110, 150, 180, 100,color=(255, 255, 255), thickness=2)
-                img.draw_string_advanced(118, 150, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(119, 180, 53, "Detect", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(510, 280, 180, 100, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 270, 53, "Super", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(519, 320, 53, "  Earth", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                elif menu_collect==2:
+                    img.draw_rectangle(110, 150, 180, 100,color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(118, 150, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(119, 180, 53, "Detect", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
-                img.draw_rectangle(110, 280, 180, 100, color=(chosen_color, chosen_color, chosen_color), fill=True)
-                img.draw_string_advanced(119, 280, 45, "Pokemon", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(119, 310, 53, "Browse", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_rectangle(110, 280, 180, 100, color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
+                    img.draw_rectangle(110, 280, 180, 100, color=(chosen_color, chosen_color, chosen_color), fill=True)
+                    img.draw_string_advanced(119, 280, 45, "Pokemon", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(119, 310, 53, "Browse", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(110, 280, 180, 100, color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
 
-                img.draw_rectangle(510, 150, 180, 100, color=(255, 255, 255), thickness=2)
-                img.draw_string_advanced(519, 150, 50, "Sheikah", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(519, 185, 50, "  Stone", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(510, 150, 180, 100, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 150, 50, "Sheikah", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(519, 185, 50, "  Stone", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
-                img.draw_rectangle(510, 280, 180, 100, color=(255, 255, 255), thickness=2)
-                img.draw_string_advanced(519, 270, 53, "Super", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(519, 320, 53, "  Earth", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-            elif menu_collect == 3:
-                img.draw_rectangle(110, 150, 180, 100, color=(255, 255, 255), thickness=2)
-                img.draw_string_advanced(118, 150, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(119, 180, 53, "Detect", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(510, 280, 180, 100, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 270, 53, "Super", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(519, 320, 53, "  Earth", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                elif menu_collect == 3:
+                    img.draw_rectangle(110, 150, 180, 100, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(118, 150, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(119, 180, 53, "Detect", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
-                img.draw_rectangle(110, 280, 180, 100, color=(255, 255, 255), thickness=2)
-                img.draw_string_advanced(119, 280, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(119, 310, 53, "Browse", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(110, 280, 180, 100, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(119, 280, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(119, 310, 53, "Browse", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
-                img.draw_rectangle(510, 150, 180, 100, color=(chosen_color, chosen_color, chosen_color), fill=True)
-                img.draw_string_advanced(519, 150, 50, "Sheikah", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(519, 185, 50, "  Stone", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_rectangle(510, 150, 180, 100, color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
+                    img.draw_rectangle(510, 150, 180, 100, color=(chosen_color, chosen_color, chosen_color), fill=True)
+                    img.draw_string_advanced(519, 150, 50, "Sheikah", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(519, 185, 50, "  Stone", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(510, 150, 180, 100, color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
 
-                img.draw_rectangle(510, 280, 180, 100, color=(255, 255, 255), thickness=2)
-                img.draw_string_advanced(519, 270, 53, "Super", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(519, 320, 53, "  Earth", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-            elif menu_collect == 4:
-                img.draw_rectangle(110, 150, 180, 100, color=(255, 255, 255), thickness=2)
-                img.draw_string_advanced(118, 150, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(119, 180, 53, "Detect", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(510, 280, 180, 100, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 270, 53, "Super", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(519, 320, 53, "  Earth", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                elif menu_collect == 4:
+                    img.draw_rectangle(110, 150, 180, 100, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(118, 150, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(119, 180, 53, "Detect", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
-                img.draw_rectangle(110, 280, 180, 100, color=(255, 255, 255), thickness=2)
-                img.draw_string_advanced(119, 280, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(119, 310, 53, "Browse", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(110, 280, 180, 100, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(119, 280, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(119, 310, 53, "Browse", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
-                img.draw_rectangle(510, 150, 180, 100, color=(255, 255, 255), thickness=2)
-                img.draw_string_advanced(519, 150, 50, "Sheikah", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(519, 185, 50, "  Stone", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(510, 150, 180, 100, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 150, 50, "Sheikah", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(519, 185, 50, "  Stone", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
-                img.draw_rectangle(510, 280, 180, 100, color=(chosen_color, chosen_color, chosen_color), fill=True)
-                img.draw_string_advanced(519, 270, 53, "Super", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(519, 320, 53, "  Earth", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_rectangle(510, 280, 180, 100, color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
+                    img.draw_rectangle(510, 280, 180, 100, color=(chosen_color, chosen_color, chosen_color), fill=True)
+                    img.draw_string_advanced(519, 270, 53, "Super", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(519, 320, 53, "  Earth", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(510, 280, 180, 100, color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
 
             # 进入查找模式
             if flag == 2:
@@ -333,17 +369,88 @@ def display_test():
                 del pinyin_results
                 gc.collect()
 
+            if flag == 1:
+                sensor.run()
+                img.clear()
+                img = sensor.snapshot(chn=CAM_CHN_ID_0)
 
+            # 确认键
+            if current_key_state5 == 1 and last_key_state5 == 0:
+                if flag==-1:
+                    if menu_collect==1:
+                        flag=1
+                    elif menu_collect==2:
+                        flag=2
+                    elif menu_collect==3:
+                        flag=3
+                    elif menu_collect==4:
+                        flag=4
+
+            # 上
+            if current_key_state1 == 1 and last_key_state1 == 0:
+                if flag==-1:
+                    if menu_collect==1:
+                        menu_collect=2
+                    elif menu_collect==2:
+                        menu_collect=1
+                    elif menu_collect==3:
+                        menu_collect=4
+                    elif menu_collect==4:
+                        menu_collect=3
+
+            # 下
+            if current_key_state2 == 1 and last_key_state2 == 0:
+                if flag==-1:
+                    if menu_collect==1:
+                        menu_collect=2
+                    elif menu_collect==2:
+                        menu_collect=1
+                    elif menu_collect==3:
+                        menu_collect=4
+                    elif menu_collect==4:
+                        menu_collect=3
+
+            # 左
+            if current_key_state3 == 1 and last_key_state3 == 0:
+                if flag==-1:
+                    if menu_collect==1:
+                        menu_collect=3
+                    elif menu_collect==2:
+                        menu_collect=4
+                    elif menu_collect==3:
+                        menu_collect=1
+                    elif menu_collect==4:
+                        menu_collect=2
+
+            # 右
+            if current_key_state4 == 1 and last_key_state4 == 0:
+                if flag==-1:
+                    if menu_collect==1:
+                        menu_collect=3
+                    elif menu_collect==2:
+                        menu_collect=4
+                    elif menu_collect==3:
+                        menu_collect=1
+                    elif menu_collect==4:
+                        menu_collect=2
+
+
+            last_key_state1 = current_key_state1
+            last_key_state2 = current_key_state2
+            last_key_state3 = current_key_state3
+            last_key_state4 = current_key_state4
+            last_key_state5 = current_key_state5
 
             Display.show_image(img)
 
-            time.sleep(0.5)
+#            time.sleep(0.5)
             os.exitpoint()
     except KeyboardInterrupt as e:
         print("user stop: ", e)
     except BaseException as e:
         print(f"Exception {e}")
 
+    sensor.stop()
     # deinit display
     Display.deinit()
     os.exitpoint(os.EXITPOINT_ENABLE_SLEEP)

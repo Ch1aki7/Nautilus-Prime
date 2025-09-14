@@ -612,15 +612,39 @@ def timer_callback(t):
                         flag = 4
 ```
 
+### 图像采集
+
+作为项目的核心目的：识别
+
+连结摄像头
+
+```
+sensor_id = 2
+sensor = None    
+    
+    # sensor加载
+    sensor = Sensor()
+    sensor.reset()
+    sensor.set_framesize(width=DISPLAY_WIDTH, height=DISPLAY_HEIGHT, chn=CAM_CHN_ID_0)
+    sensor.set_pixformat(Sensor.RGB565, chn=CAM_CHN_ID_0)
+    
+            if flag == 1:
+                sensor.run()
+                img.clear()
+                img = sensor.snapshot(chn=CAM_CHN_ID_0)
+```
+
 
 
 ### 按键总控
 
-首先查找可用引脚并接线
+首先查找可用引脚并接线，之后进行实例化
 
-```
+然后再while循环里用cur获取按键状态，last记录上个按键状态，以获取上升沿
 
-```
+总之贯穿整座石山，懒得复制了
+
+牛逼，测试才发现上下拉搞错了，写反完了:sweat_smile:
 
 ## 更新日志
 
@@ -644,3 +668,5 @@ def timer_callback(t):
 - 编写了初始界面触摸交互
 - 改变了img通道，bmp正常draw_image显示
 - 首字母查找功能，之后完成缩略图显示
+- 图像采集
+- 按键控制
