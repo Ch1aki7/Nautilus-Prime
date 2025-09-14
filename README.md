@@ -509,6 +509,12 @@ else:
 
 ### 拼音查找映射
 
+首字母搜索，分为精确和模糊
+
+img.draw_image()无法导出压缩过的jpg，缩略图正在想办法
+
+![image-20250914132020196](README.assets/image-20250914132020196.png)
+
 ### 触摸控制
 
 感觉触摸比按键好写啊，先从触摸干起吧
@@ -616,18 +622,6 @@ def timer_callback(t):
 
 ```
 
-
-
-## timer定时器回调函数
-
-```
-# 创建软件定时器，index=-1表示软件定时器
-tim = Timer(-1)
-
-# 初始化定时器为周期模式，每隔500ms调用一次led_toggle回调函数
-tim.init(period=500, mode=Timer.PERIODIC, callback=led_toggle)
-```
-
 ## 更新日志
 
 还剩四天，写在前面的话
@@ -647,3 +641,6 @@ tim.init(period=500, mode=Timer.PERIODIC, callback=led_toggle)
 
 ### 9.14
 
+- 编写了初始界面触摸交互
+- 改变了img通道，bmp正常draw_image显示
+- 首字母查找功能，之后完成缩略图显示
