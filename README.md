@@ -453,6 +453,8 @@ if flag == 2:
 
 制作键盘
 
+`enumerate()` 是 Python 内置的一个函数，用于遍历可迭代对象（如列表、元组、字符串等）时，同时获取元素的索引和值。它返回的是一个枚举对象，可以在遍历时同时得到每个元素的索引和该元素的值。用这个可以简化我们的代码，避免使用手动创建的计数变量。
+
 ```python
 # QWERTY键盘布局
 keys = [
@@ -505,6 +507,115 @@ else:
 
 ![image-20250913204254426](README.assets/image-20250913204254426.png)
 
+### 拼音查找映射
+
+### 触摸控制
+
+感觉触摸比按键好写啊，先从触摸干起吧
+
+```python
+        while True:
+            # 触摸控制
+            p = tp.read()
+            if p != ():
+                if p[0].x > 110 and p[0].x < 290 and p[0].y > 150 and p[0].y < 250:
+                    if menu_collect != 1:
+                        menu_collect = 1
+                    else:
+                        flag = 1
+                if p[0].x > 110 and p[0].x < 290 and p[0].y > 280 and p[0].y < 380:
+                    if menu_collect != 2:
+                        menu_collect = 2
+                    else:
+                        flag = 2
+                if p[0].x > 510 and p[0].x < 690 and p[0].y > 150 and p[0].y < 250:
+                    menu_collect = 3
+                if p[0].x > 510 and p[0].x < 690 and p[0].y > 280 and p[0].y < 380:
+                    menu_collect = 4
+
+            time.sleep(1)  # 等待 1 秒再读取
+```
+
+发现这样在while True里循环同样会影响闪烁部分的功能，因此需要用到timer定时器回调函数
+
+报错大王
+
+```
+def touch_unit(timer, tp):
+    p = tp.read()
+    if p != ():
+        if p[0].x > 110 and p[0].x < 290 and p[0].y > 150 and p[0].y < 250:
+            if menu_collect != 1:
+                menu_collect = 1
+            else:
+                flag = 1
+        if p[0].x > 110 and p[0].x < 290 and p[0].y > 280 and p[0].y < 380:
+            if menu_collect != 2:
+                menu_collect = 2
+            else:
+                flag = 2
+        if p[0].x > 510 and p[0].x < 690 and p[0].y > 150 and p[0].y < 250:
+            menu_collect = 3
+        if p[0].x > 510 and p[0].x < 690 and p[0].y > 280 and p[0].y < 380:
+            menu_collect = 4
+            
+        # 触摸控制
+        tp = TOUCH(0)
+        tim = Timer(-1)
+        tim.init(period=1000, mode=Timer.PERIODIC, callback=touch_unit, arg=tp)
+```
+
+分析发现触摸应该还是要写在循环里，定时器可控制一个全局变量防止频繁触摸访问
+
+```python
+can_touch = 1;
+def timer_callback(t):
+    global can_touch
+    can_touch = 1
+    。。。
+    。。。
+        # 触摸控制
+        tp = TOUCH(0)    
+        global can_touch
+        tim = Timer(-1)
+        tim.init(period=1000, mode=Timer.PERIODIC, callback=timer_callback)
+
+        while True:
+            p = tp.read()
+            if p != () and can_touch == 1:
+                can_touch = 0
+                if p[0].x > 110 and p[0].x < 290 and p[0].y > 150 and p[0].y < 250:
+                    if menu_collect != 1:
+                        menu_collect = 1
+                    else:
+                        flag = 1
+                if p[0].x > 110 and p[0].x < 290 and p[0].y > 280 and p[0].y < 380:
+                    if menu_collect != 2:
+                        menu_collect = 2
+                    else:
+                        flag = 2
+                if p[0].x > 510 and p[0].x < 690 and p[0].y > 150 and p[0].y < 250:
+                    if menu_collect != 3:
+                        menu_collect = 3
+                    else:
+                        flag = 3
+                if p[0].x > 510 and p[0].x < 690 and p[0].y > 280 and p[0].y < 380:
+                    if menu_collect != 4:
+                        menu_collect = 4
+                    else:
+                        flag = 4
+```
+
+
+
+### 按键总控
+
+首先查找可用引脚并接线
+
+```
+
+```
+
 
 
 ## timer定时器回调函数
@@ -516,4 +627,23 @@ tim = Timer(-1)
 # 初始化定时器为周期模式，每隔500ms调用一次led_toggle回调函数
 tim.init(period=500, mode=Timer.PERIODIC, callback=led_toggle)
 ```
+
+## 更新日志
+
+还剩四天，写在前面的话
+
+项目困难是有很多的，由于需要使用全新的开发板套件，需要大量的了解相关库函数用法；并且这是我首次在可视化模块做出学习研究，需要相关的理论基础；  再就是由于研发方向可能过于邪门和困难，难以找到合作组员；  最后是由于时间紧，任务重，需要有着连续高强度工作提前适应牛马生活，对精神是一个很大的考验，这几天的工作常态就是早起赶进度开发，然后晚归打打warframe
+
+### 9.12
+
+- 开发前相关准备
+- 初研lvgl图形库
+
+### 9.13
+
+- 666lvgl太抽象了直接放，采用套件移植的openmv库
+- 编写初始界面
+- 编写输入界面、键盘
+
+### 9.14
 

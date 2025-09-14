@@ -4,9 +4,19 @@ from media.sensor import *
 import time, os, sys, gc, urandom      # 系统工具库（时间、文件、内存回收）
 import lvgl as lv                 # 嵌入式 GUI 库（LVGL，负责 UI 渲染与交互）
 from machine import TOUCH         # K230 触摸设备驱动（读取触摸坐标）
+from machine import Pin
+from machine import FPIOA
+from machine import Timer
 
 DISPLAY_WIDTH = ALIGN_UP(800, 16)  # 800 对齐后仍为 800（800 % 16 = 0）
 DISPLAY_HEIGHT = 480               # 固定高度 480
+
+can_touch = 1;
+
+def init_uart():
+    fpioa = FPIOA()
+
+    fpioa.set_function()
 
 # def display_init():
 #     Display.init(Display.ST7701, width = DISPLAY_WIDTH, height = DISPLAY_HEIGHT, to_ide = True)
@@ -18,34 +28,73 @@ DISPLAY_HEIGHT = 480               # 固定高度 480
 #     Display.deinit()                         # 关闭显示驱动
 #     MediaManager.deinit()                    # 释放媒体资源（缓冲区等）
 
+def timer_callback(t):
+    global can_touch
+    can_touch = 1
+
 def display_test():
     print("display test")
 
-    img = image.Image(DISPLAY_WIDTH, DISPLAY_HEIGHT, image.ARGB8888)
+    img = image.Image(DISPLAY_WIDTH, DISPLAY_HEIGHT, image.RGB565)
     src_img = image.Image("/data/pokedex.bmp")
     # sensor = Sensor()
     # sensor.reset()
-
     Display.init(Display.ST7701, width = DISPLAY_WIDTH, height = DISPLAY_HEIGHT, to_ide = True)
     MediaManager.init()
+    
 
     try:
+
+        key = Pin(62, Pin.OUT, pull=Pin.PULL_NONE, drive=7)
+
+
         menu_collect = 3 # 当前选中哪个模式
         chosen_color = 0
         input_text = ""
         key_chosen_flag = True
-        flag = 2 # 当前在哪个模式里 -1为初始
+        flag = -1 # 当前在哪个模式里 -1为初始
         key_chosen=20 # 输入界面里的键位选择
 
+        # 触摸控制
+        tp = TOUCH(0)    
+        global can_touch
+        tim = Timer(-1)
+        tim.init(period=1000, mode=Timer.PERIODIC, callback=timer_callback)
+
         while True:
+            p = tp.read()
+            if p != () and can_touch == 1:
+                can_touch = 0
+                if p[0].x > 110 and p[0].x < 290 and p[0].y > 150 and p[0].y < 250:
+                    if menu_collect != 1:
+                        menu_collect = 1
+                    else:
+                        flag = 1
+                if p[0].x > 110 and p[0].x < 290 and p[0].y > 280 and p[0].y < 380:
+                    if menu_collect != 2:
+                        menu_collect = 2
+                    else:
+                        flag = 2
+                if p[0].x > 510 and p[0].x < 690 and p[0].y > 150 and p[0].y < 250:
+                    if menu_collect != 3:
+                        menu_collect = 3
+                    else:
+                        flag = 3
+                if p[0].x > 510 and p[0].x < 690 and p[0].y > 280 and p[0].y < 380:
+                    if menu_collect != 4:
+                        menu_collect = 4
+                    else:
+                        flag = 4
+
             img.clear()
             img.draw_string_advanced(95, 25, 80, "NAUTILUS-PRIME", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
             img.draw_string_advanced(265, 385, 30, "Press Any Key to Start", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
             img.draw_string_advanced(225, 425, 40, "Presented by Zaphkiel", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-            #img.draw_image(src_img, 350, 200)
+            img.draw_image(src_img, 350, 200,alpha=256, scale=1.0)
             #暂时无效，原因未知，只能用Display
-            if flag == -1:
-                Display.show_image(src_img,x=350,y=200,layer = Display.LAYER_OSD1)
+            #改变了img通道后完全解决
+            #if flag == -1:
+                #Display.show_image(src_img,x=350,y=200,layer = Display.LAYER_OSD1)
 
 
             chosen_color=255-chosen_color
@@ -173,6 +222,19 @@ def display_test():
                 else:
                     img.draw_rectangle(520, 410, 190, key_height, color=(255, 255, 255))
                     img.draw_string_advanced(530, 410, 30, "<- Backspace", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                # 首字母搜索 待数据集训练
+                with open("/data/pinyin.txt", "r",encoding='utf-8') as f:
+                    pinyin_list = eval(f.read())
+
+                pinyin_results=[]
+                for i,pinyin in enumerate(pinyin_list):
+                    if pinyin.startswith(input_text):
+                        pinyin_results.append(i)
+
+                result_num=len(pinyin_results)
+
+
 
 
             Display.show_image(img)
