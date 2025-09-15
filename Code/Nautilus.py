@@ -755,6 +755,19 @@ def display_test():
                             key_chosen=key_chosen-10
                         elif key_chosen<=28:
                             key_chosen=key_chosen-10
+                elif flag==10:
+                    if menu_collect == 1:
+                        menu_collect = 1
+                    elif menu_collect == 2:
+                        menu_collect = 1
+                    elif menu_collect == 3:
+                        menu_collect = 2
+                    elif menu_collect == 4:
+                        menu_collect = 4
+                    elif menu_collect == 5:
+                        menu_collect = 4
+                    elif menu_collect == 6:
+                        menu_collect = 5
 
 
             # 下
@@ -796,7 +809,19 @@ def display_test():
                             key_chosen=28
                         elif key_chosen<=28:
                             key_chosen=-1
-
+                elif flag==10:
+                    if menu_collect == 1:
+                        menu_collect = 2
+                    elif menu_collect == 2:
+                        menu_collect = 3
+                    elif menu_collect == 3:
+                        menu_collect = 3
+                    elif menu_collect == 4:
+                        menu_collect = 5
+                    elif menu_collect == 5:
+                        menu_collect = 6
+                    elif menu_collect == 6:
+                        menu_collect = 6
 
             # 左
             if current_key_state3 == 0 and last_key_state3 == 1:
@@ -831,7 +856,19 @@ def display_test():
                             key_chosen=28
                         else:
                             key_chosen=key_chosen-1
-
+                elif flag==10:
+                    if menu_collect == 1:
+                        menu_collect = 1
+                    elif menu_collect == 2:
+                        menu_collect = 2
+                    elif menu_collect == 3:
+                        menu_collect = 3
+                    elif menu_collect == 4:
+                        menu_collect = 1
+                    elif menu_collect == 5:
+                        menu_collect = 2
+                    elif menu_collect == 6:
+                        menu_collect = 3
 
             # 右
             if current_key_state4 == 0 and last_key_state4 == 1:
@@ -866,7 +903,20 @@ def display_test():
                             key_chosen=21
                         else:
                             key_chosen=key_chosen+1
-
+                elif flag==10:
+                    if menu_collect == 1:
+                        menu_collect = 4
+                    elif menu_collect == 2:
+                        menu_collect = 5
+                    elif menu_collect == 3:
+                        menu_collect = 6
+                    elif menu_collect == 4:
+                        menu_collect = 4
+                    elif menu_collect == 5:
+                        menu_collect = 5
+                    elif menu_collect == 6:
+                        menu_collect = 6
+                        
             # 返回
             if button.value() == 1:
                 if flag == 1 or flag == 2:
