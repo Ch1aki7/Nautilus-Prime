@@ -1,0 +1,19 @@
+{
+    "files.associations": {
+        "stepmotor.h": "c",
+        "vib.h": "c",
+        "uart2.h": "c",
+        "uart1.h": "c",
+        "displayer.h": "c",
+        "ir.h": "c",
+        "ds1302.h": "c",
+        "key.h": "c",
+        "music.h": "c",
+        "beep.h": "c",
+        "m24c02.h": "c",
+        "fm_radio.h": "c",
+        "adc.h": "c",
+        "ext.h": "c",
+        "hall.h": "c"
+    }
+}

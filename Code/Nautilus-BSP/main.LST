@@ -1,0 +1,450 @@
+C51 COMPILER V9.51   MAIN                                                                  09/12/2025 10:58:56 PAGE 1   
+
+
+C51 COMPILER V9.51, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: D:\Keil\C51\BIN\C51.EXE main.c BROWSE INCDIR(.\inc) DEBUG OBJECTEXTEND TABS(2)
+
+line level    source
+
+   1          #include "STC15F2K60S2.H" //±ØÐë¡£
+   2          #include "sys.H"      //±ØÐë¡£
+   3          #include "displayer.H"
+   4          #include "beep.H"
+   5          #include "music.H"
+   6          #include "key.H"
+   7          #include "stepmotor.H"
+   8          #include "vib.H"
+   9          #include "hall.H"
+  10          #include "adc.H"
+  11          #include "uart1.h"
+  12          #include "uart2.h"
+  13          #include "IR.h"
+  14          #include "DS1302.h"
+  15          #include "M24C02.h"
+  16          #include "FM_Radio.h"
+  17          #include "EXT.h"
+  18          #include "stepmotor.h"
+  19          #define eg 4
+  20          
+  21          code unsigned long SysClock = 11059200; // ±ØÐë¡£¶¨ÒåÏµÍ³¹¤×÷Ê±ÖÓÆµÂÊ(Hz)£¬ÓÃ»§±ØÐëÐÞ¸Ä³ÉÓëÊµ¼Ê¹¤×÷ÆµÂÊ£¨Ï
+             -ÂÔØÊ±Ñ¡ÔñµÄ£©Ò»ÖÂ
+  22          #ifdef _displayer_H_          // ÏÔÊ¾Ä£¿éÑ¡ÓÃÊ±±ØÐë¡££¨ÊýÂë¹ÜÏÔÊ¾ÒëÂë±í£¬ÓÃ‘ô¿ÉÐÞ¸Ä¡¢Ôö¼ÓµÈ£©
+  23          code char decode_table[] = {
+  24            0x3F, // 0
+  25            0x06, // 1
+  26            0x5B, // 2
+  27            0x4F, // 3
+  28            0x66, // 4
+  29            0x6D, // 5
+  30            0x7D, // 6
+  31            0x07, // 7
+  32            0x7F, // 8
+  33            0x6F, // 9
+  34            0x76, // H (10)
+  35            0x38, // L (11)
+  36            0x40, // - (12)
+  37            0x00, // ¿Õ (13)
+  38            0x1C};
+  39          #endif
+  40          
+  41          #if eg == 1
+              
+              int recieved = 0, i;
+              #define RECEIVE_LEN 10
+              char data1[RECEIVE_LEN];
+              char data2[RECEIVE_LEN];
+              char matcheddt[] = {
+                0xAA, 0x55};
+              void myDisplay_callback()
+              {
+                if (recieved == 1)
+                  Seg7Print(1, 1, 1, 1, 1, 1, 1, 1);
+                else
+                  Seg7Print(1, 2, 10, 11, 12, 13, 2, 1);
+C51 COMPILER V9.51   MAIN                                                                  09/12/2025 10:58:56 PAGE 2   
+
+              }
+              void myUart1_callback()
+              {
+                recieved = 1;
+                for (i = 0; i < RECEIVE_LEN; i++)
+                {
+                  data2[i] = data1[RECEIVE_LEN - 1 - i];
+                }
+                Uart1Print(data2, 10);
+              }
+              #endif
+  66          
+  67          #if eg == 2
+              int i;
+              #define RECEIVE_LEN 5
+              char data1[] = {1, 2, 3, 4, 5};
+              char data2[RECEIVE_LEN];
+              unsigned int total = 0;
+              void myUart1_callback()
+              {
+                char k = GetKeyAct(enumKey1);
+                if (k == enumKeyPress)
+                {
+                  Uart1Print(data1, 5);
+                }
+              }
+              void myUart2_callback()
+              {
+                for (i = 0; i < RECEIVE_LEN; i++)
+                {
+                  total += (unsigned char)data1[i];
+                }
+                LedPrint(total);
+                total = 0;
+              }
+              
+              #endif
+  92          
+  93          #if eg == 3
+              int i;
+              #define RECEIVE_LEN 5
+              char data1[RECEIVE_LEN];
+              char data2[RECEIVE_LEN];
+              unsigned int total = 0;
+              
+              void myUart1_callback()
+              {
+                IrPrint(data1, RECEIVE_LEN);
+              }
+              void myIr2_callback()
+              {
+                for (i = 0; i < RECEIVE_LEN; i++)
+                {
+                  total += (unsigned char)data2[i];
+                }
+                LedPrint(total);
+                total = 0;
+              }
+              #endif
+ 114          
+ 115          #if eg == 4
+ 116          struct_DS1302_RTC initTime = {
+C51 COMPILER V9.51   MAIN                                                                  09/12/2025 10:58:56 PAGE 3   
+
+ 117            0x00,
+ 118            0x52,
+ 119            0x17,
+ 120            0x11,
+ 121            0x09,
+ 122            0x04,
+ 123            0x25};
+ 124          void myDisplay_callback()
+ 125          {
+ 126   1        struct_DS1302_RTC currentTime;
+ 127   1        unsigned char dispData[8]; // ÊýÂë¹ÜÏÔÊ¾Êý¾ÝÊý×é
+ 128   1      
+ 129   1        // ¶ÁÈ¡µ±Ç°Ê±¼ä
+ 130   1        currentTime = RTC_Read();
+ 131   1      
+ 132   1        // ½âÎöÊ±·ÖÃëÎªÊýÂë¹ÜÏÔÊ¾¸ñÊ½£¨Ê±Ê±¡ª·Ö·Ö¡ªÃëÃë£©
+ 133   1        dispData[0] = (currentTime.hour >> 4) & 0x0F; // Ê±¸ßÎ»
+ 134   1        dispData[1] = currentTime.hour & 0x0F;      // Ê±µÍÎ»
+ 135   1        dispData[2] = 12;               // '-'·Ö¸ô·û
+ 136   1        dispData[3] = (currentTime.minute >> 4) & 0x0F; // ·Ö¸ßÎ»
+ 137   1        dispData[4] = currentTime.minute & 0x0F;    // ·ÖµÍÎ»
+ 138   1        dispData[5] = 12;               // '-'·Ö¸ô·û
+ 139   1        dispData[6] = (currentTime.second >> 4) & 0x0F; // Ãë¸ßÎ»
+ 140   1        dispData[7] = currentTime.second & 0x0F;    // ÃëµÍÎ»
+ 141   1      
+ 142   1        // Êä³öµ½ÊýÂë¹Ü£¨8Î»ÏÔÊ¾£©
+ 143   1        Seg7Print(dispData[0], dispData[1], dispData[2], dispData[3],
+ 144   1              dispData[4], dispData[5], dispData[6], dispData[7]);
+ 145   1      }
+ 146          #endif
+ 147          
+ 148          #if eg == 5
+              unsigned char val;
+              void firstRead()
+              {
+                val = M24C02_Read(0x26);
+                M24C02_Write(0x26, ++val);
+              }
+              void myDisplay_callback()
+              {
+                unsigned char valc = val;
+                unsigned char d0, d1, d2, d3, d4, d5, d6, d7;
+              
+                // ²ð·ÖÃ¿Ò»Î»Êý×Ö£¨0-7Î»£¬´ÓÓÒµ½×ó£©
+                d0 = valc % 10; // µÚ0Î»£¨×îÓÒ±ß£©
+                valc /= 10;
+                d1 = valc % 10; // µÚ1Î»
+                valc /= 10;
+                d2 = valc % 10; // µÚ2Î»
+                valc /= 10;
+                d3 = valc % 10; // µÚ3Î»
+                valc /= 10;
+                d4 = valc % 10; // µÚ4Î»
+                valc /= 10;
+                d5 = valc % 10; // µÚ5Î»
+                valc /= 10;
+                d6 = valc % 10; // µÚ6Î»
+                valc /= 10;
+                d7 = valc % 10; // µÚ7Î»£¨×î×ó±ß£©
+              
+                // Êä³öµ½8Î»ÊýÂë¹Ü£¨²ÎÊýË³Ðò¶ÔÓ¦d0µ½d7£¬¼´´ÓÓÒµ½×óÏÔÊ¾£©
+                Seg7Print(d7, d6, d5, d4, d3, d2, d1, d0);
+C51 COMPILER V9.51   MAIN                                                                  09/12/2025 10:58:56 PAGE 4   
+
+                LedPrint(val);
+              }
+              #endif
+ 182          
+ 183          #if eg == 6
+              struct_FMRadio radio = {
+                918, 6, 0, 0, 0};
+              #endif
+ 187          
+ 188          #if eg == 7;
+*** WARNING C323 IN LINE 188 OF main.c: newline expected, extra characters found
+              code char promise[] = {
+              
+                0x16, 0x08, 0x23, 0x08, 0x31, 0x08, 0x23, 0x08, 0x16, 0x08, 0x24, 0x08, 0x31, 0x08, 0x24, 0x08,
+                0x21, 0x08, 0x23, 0x08, 0x31, 0x08, 0x23, 0x08, 0x22, 0x08, 0x25, 0x08, 0x27, 0x08, 0x25, 0x08,
+                0x16, 0x08, 0x23, 0x08, 0x31, 0x08, 0x23, 0x08, 0x16, 0x08, 0x24, 0x08, 0x31, 0x08, 0x24, 0x08,
+                0x21, 0x08, 0x23, 0x08, 0x31, 0x08, 0x23, 0x08, 0x22, 0x08, 0x25, 0x08, 0x27, 0x08, 0x25, 0x08,
+                0x16, 0x08, 0x23, 0x08, 0x31, 0x08, 0x23, 0x08, 0x16, 0x08, 0x24, 0x08, 0x31, 0x08, 0x24, 0x08,
+                0x21, 0x08, 0x23, 0x08, 0x31, 0x08, 0x23, 0x08, 0x22, 0x08, 0x25, 0x08, 0x27, 0x08, 0x25, 0x08,
+                0x16, 0x08, 0x23, 0x08, 0x31, 0x08, 0x23, 0x08, 0x16, 0x08, 0x24, 0x08, 0x31, 0x08, 0x24, 0x08,
+                0x21, 0x08, 0x23, 0x08, 0x31, 0x08, 0x23, 0x08, 0x22, 0x08, 0x25, 0x08, 0x27, 0x08, 0x32, 0x08,
+              
+                0x33, 0x30, 0x00, 0x08, 0x35, 0x08, 0x31, 0x30, 0x00, 0x08, 0x26, 0x08, 0x33, 0x30, 0x00, 0x08, 0x31, 0x0
+             -8, 0x25, 0x40,
+              
+                0x00, 0x10, 0x25, 0x08, 0x25, 0x08, 0x25, 0x08, 0x24, 0x08, 0x23, 0x28, 0x22, 0x08, 0x22, 0x08, 0x23, 0x0
+             -8, 0x22, 0x08, 0x21, 0x08,
+                0x21, 0x10, 0x25, 0x08, 0x25, 0x08, 0x25, 0x08, 0x26, 0x08, 0x25, 0x28, 0x31, 0x08, 0x31, 0x08, 0x31, 0x0
+             -8, 0x27, 0x10,
+                0x25, 0x08, 0x23, 0x08, 0x25, 0x08, 0x25, 0x08, 0x25, 0x08, 0x24, 0x08, 0x23, 0x28, 0x22, 0x08, 0x22, 0x0
+             -8, 0x23, 0x08, 0x22, 0x08, 0x21, 0x08,
+                0x21, 0x10, 0x25, 0x08, 0x25, 0x08, 0x25, 0x08, 0x26, 0x08, 0x25, 0x28, 0x31, 0x08, 0x31, 0x08, 0x32, 0x0
+             -8, 0x27, 0x10,
+                0x31, 0x18, 0x27, 0x08, 0x26, 0x08, 0x26, 0x08, 0x27, 0x08, 0x31, 0x08, 0x32, 0x18, 0x31, 0x08, 0x27, 0x1
+             -0, 0x31, 0x08, 0x27, 0x08,
+                0x26, 0x18, 0x27, 0x08, 0x31, 0x10, 0x27, 0x08, 0x31, 0x08, 0x32, 0x18, 0x31, 0x08, 0x32, 0x18, 0x33, 0x0
+             -8,
+                0x31, 0x18, 0x27, 0x08, 0x26, 0x08, 0x26, 0x08, 0x27, 0x08, 0x31, 0x08, 0x32, 0x18, 0x31, 0x08, 0x27, 0x1
+             -0, 0x31, 0x08, 0x27, 0x08,
+                0x26, 0x18, 0x27, 0x08, 0x31, 0x10, 0x27, 0x08, 0x31, 0x08, 0x32, 0x18, 0x31, 0x08, 0x32, 0x18, 0x33, 0x0
+             -8, 0x26, 0x40,
+              
+                0x00, 0x10};
+              void musicPlayer()
+              {
+                if (GetKeyAct(enumKey1) == enumKeyPress)
+                {
+                  SetPlayerMode(enumModePlay);
+                }
+                if (GetKeyAct(enumKey2) == enumKeyPress)
+                {
+                  SetPlayerMode(enumModePause);
+                }
+              }
+              #endif
+ 224          
+ 225          #if eg == 8
+              
+              void myDisplay_callback()
+              {
+                unsigned int temp = GetADC().Rt;
+                unsigned char valc = temp;
+C51 COMPILER V9.51   MAIN                                                                  09/12/2025 10:58:56 PAGE 5   
+
+                unsigned char d0, d1, d2, d3, d4, d5, d6, d7;
+              
+                // ²ð·ÖÃ¿Ò»Î»Êý×Ö£¨0-7Î»£¬´ÓÓÒµ½×ó£©
+                d0 = valc % 10; // µÚ0Î»£¨×îÓÒ±ß£©
+                valc /= 10;
+                d1 = valc % 10; // µÚ1Î»
+                valc /= 10;
+                d2 = valc % 10; // µÚ2Î»
+                valc /= 10;
+                d3 = valc % 10; // µÚ3Î»
+                valc /= 10;
+                d4 = valc % 10; // µÚ4Î»
+                valc /= 10;
+                d5 = valc % 10; // µÚ5Î»
+                valc /= 10;
+                d6 = valc % 10; // µÚ6Î»
+                valc /= 10;
+                d7 = valc % 10; // µÚ7Î»£¨×î×ó±ß£©
+              
+                // Êä³öµ½8Î»ÊýÂë¹Ü£¨²ÎÊýË³Ðò¶ÔÓ¦d0µ½d7£¬¼´´ÓÓÒµ½×óÏÔÊ¾£©
+                Seg7Print(d7, d6, d5, d4, d3, d2, d1, d0);
+              }
+              #endif
+ 254          
+ 255          #if eg == 9
+              void myDisplay_callback()
+              {
+                unsigned char valc = GetUltraSonic();
+                unsigned char d0, d1, d2, d3, d4, d5, d6, d7;
+              
+                // ²ð·ÖÃ¿Ò»Î»Êý×Ö£¨0-7Î»£¬´ÓÓÒµ½×ó£©
+                d0 = valc % 10; // µÚ0Î»£¨×îÓÒ±ß£©
+                valc /= 10;
+                d1 = valc % 10; // µÚ1Î»
+                valc /= 10;
+                d2 = valc % 10; // µÚ2Î»
+                valc /= 10;
+                d3 = valc % 10; // µÚ3Î»
+                valc /= 10;
+                d4 = valc % 10; // µÚ4Î»
+                valc /= 10;
+                d5 = valc % 10; // µÚ5Î»
+                valc /= 10;
+                d6 = valc % 10; // µÚ6Î»
+                valc /= 10;
+                d7 = valc % 10; // µÚ7Î»£¨×î×ó±ß£©
+              
+                // Êä³öµ½8Î»ÊýÂë¹Ü£¨²ÎÊýË³Ðò¶ÔÓ¦d0µ½d7£¬¼´´ÓÓÒµ½×óÏÔÊ¾£©
+                Seg7Print(d7, d6, d5, d4, d3, d2, d1, d0);
+              }
+              #endif
+ 282          
+ 283          #if eg == 10
+              void myDisplay_callback()
+              {
+              }
+              void keyController()
+              {
+                char k1 = GetKeyAct(enumKey1);
+                char k2 = GetKeyAct(enumKey2);
+                char k3 = GetKeyAct(enumKey3);
+              
+C51 COMPILER V9.51   MAIN                                                                  09/12/2025 10:58:56 PAGE 6   
+
+                if (k1 == enumKeyPress)
+                {
+                  SetStepMotor(enumStepMotor1, 50, 10);
+                }
+                else if (k2 == enumKeyPress)
+                {
+                  SetStepMotor(enumStepMotor1, 30, -10);
+                }
+                else if (k3 == enumKeyPress)
+                {
+                  EmStop(enumStepMotor1);
+                }
+              }
+              #endif
+ 307          
+ 308          void main()
+ 309          {
+ 310   1      #if eg == 1
+                DisplayerInit();
+                Uart1Init(2400);
+                SetUart1Rxd(data1, RECEIVE_LEN, matcheddt, 0);
+                SetEventCallBack(enumEventUart1Rxd, myUart1_callback);
+                SetEventCallBack(enumEventSys10mS, myDisplay_callback);
+                SetDisplayerArea(0, 7);
+              #endif
+ 318   1      
+ 319   1      #if eg == 2
+                DisplayerInit();
+                KeyInit();
+                Uart1Init(2400);
+                Uart2Init(1200, Uart2Usedfor485ModBus);
+              
+                // SetUart1Rxd(data1, RECEIVE_LEN, data1, 0);
+                SetUart2Rxd(data2, RECEIVE_LEN, data2, 0);
+              
+                SetEventCallBack(enumEventKey, myUart1_callback);
+                // SetEventCallBack(enumEventUart1Rxd, myUart1_callback);
+                SetEventCallBack(enumEventUart2Rxd, myUart2_callback);
+                SetDisplayerArea(0, 7);
+              #endif
+ 333   1      
+ 334   1      #if eg == 3
+                DisplayerInit();
+                Uart1Init(2400);
+                IrInit(43);
+                SetUart1Rxd(data1, RECEIVE_LEN, data1, 0);
+                SetIrRxd(data2, RECEIVE_LEN);
+                SetEventCallBack(enumEventUart1Rxd, myUart1_callback);
+                SetEventCallBack(enumEventIrRxd, myIr2_callback);
+                SetDisplayerArea(0, 7);
+              #endif
+ 344   1      
+ 345   1      #if eg == 4
+ 346   1        DisplayerInit();
+ 347   1        DS1302Init(initTime);
+ 348   1      
+ 349   1        SetEventCallBack(enumEventSys10mS, myDisplay_callback);
+ 350   1        SetDisplayerArea(0, 7);
+ 351   1      #endif
+ 352   1      
+ 353   1      #if eg == 5
+                DisplayerInit();
+C51 COMPILER V9.51   MAIN                                                                  09/12/2025 10:58:56 PAGE 7   
+
+                firstRead();
+              
+                SetEventCallBack(enumEventSys10mS, myDisplay_callback);
+                SetDisplayerArea(0, 7);
+              #endif
+ 360   1      
+ 361   1      #if eg == 6
+                FMRadioInit(radio);
+              #endif
+ 364   1      
+ 365   1      #if eg == 7
+                DisplayerInit();
+                BeepInit();
+                KeyInit();
+                MusicPlayerInit();
+                SetDisplayerArea(0, 7);
+                // SetMusic(100,0xFA,startup_music,sizeof(startup_music),enumMscDrvSeg7);
+                SetMusic(100, 0xFA, promise, sizeof(promise), enumMscDrvSeg7);
+                SetEventCallBack(enumEventKey, musicPlayer);
+              #endif
+ 375   1      
+ 376   1      #if eg == 8
+                AdcInit(ADCexpEXT);
+                DisplayerInit();
+                SetEventCallBack(enumEventSys1S, myDisplay_callback);
+                SetDisplayerArea(0, 7);
+              #endif
+ 382   1      
+ 383   1      #if eg == 9
+                EXTInit(enumEXTUltraSonic);
+                DisplayerInit();
+                SetEventCallBack(enumEventSys10mS, myDisplay_callback);
+                SetDisplayerArea(0, 7);
+              #endif
+ 389   1      
+ 390   1      #if eg == 10
+                StepMotorInit();
+                DisplayerInit();
+                KeyInit();
+                SetEventCallBack(enumEventKey, keyController);
+                SetEventCallBack(enumEventSys10mS, myDisplay_callback);
+                SetDisplayerArea(0, 7);
+              #endif
+ 398   1      
+ 399   1        MySTC_Init();
+ 400   1        while (1)
+ 401   1        {
+ 402   2          MySTC_OS();
+ 403   2        }
+ 404   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    135    ----
+   CONSTANT SIZE    =     19    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      7      15
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

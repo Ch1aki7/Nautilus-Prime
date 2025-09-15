@@ -634,8 +634,6 @@ sensor = None
                 img = sensor.snapshot(chn=CAM_CHN_ID_0)
 ```
 
-
-
 ### 按键总控
 
 首先查找可用引脚并接线，之后进行实例化
@@ -645,6 +643,138 @@ sensor = None
 总之贯穿整座石山，懒得复制了
 
 牛逼，测试才发现上下拉搞错了，写反完了:sweat_smile:
+
+### 训练模型
+
+Ubuntu克隆仓库
+
+```
+git clone https://github.com/ultralytics/yolov5.git
+cd yolov5
+pip install -r requirements.txt
+```
+
+在经历了龟速下载后，已是第二天
+
+运行测试文件
+
+```
+python -u "/home/zaphkiel/yolov5/detect.py"
+```
+
+发现兼容问题，需要降级numpy到1.xx版本
+
+降级后运行发现多了个文件夹，里面是识别结果，帅
+
+![image-20250915102500305](README.assets/image-20250915102500305.png)
+
+![image-20250915102527931](README.assets/image-20250915102527931.png)
+
+不过看了一下YOLO的分类、检测、分割，为了简便还是搞分类吧
+
+**YOLO 分类任务的数据集结构**
+
+关于 [Ultralytics](https://www.ultralytics.com/) 对于 YOLO 分类任务，数据集必须按照特定的分割目录结构进行组织，位于 `root` 目录下，以方便进行正确的训练、测试和可选的验证过程。此结构包括用于训练（`train`）和测试（`test`）阶段的可选目录。`val`）。
+
+每个目录应包含一个子目录，对应于数据集中的每个类别。这些子目录以相应的类别命名，并包含该类别的所有图像。确保每个图像文件都具有唯一的名称，并以通用格式（如 JPEG 或 PNG）存储。
+
+以 [CIFAR-10](https://docs.ultralytics.com/zh/datasets/classify/cifar10/) 数据集为例。文件夹结构应如下所示：
+
+```
+cifar-10-/
+|
+|-- train/
+|   |-- airplane/
+|   |   |-- 10008_airplane.png
+|   |   |-- 10009_airplane.png
+|   |   |-- ...
+|   |
+|   |-- automobile/
+|   |   |-- 1000_automobile.png
+|   |   |-- 1001_automobile.png
+|   |   |-- ...
+|   |
+|   |-- bird/
+|   |   |-- 10014_bird.png
+|   |   |-- 10015_bird.png
+|   |   |-- ...
+|   |
+|   |-- ...
+|
+|-- test/
+|   |-- airplane/
+|   |   |-- 10_airplane.png
+|   |   |-- 11_airplane.png
+|   |   |-- ...
+|   |
+|   |-- automobile/
+|   |   |-- 100_automobile.png
+|   |   |-- 101_automobile.png
+|   |   |-- ...
+|   |
+|   |-- bird/
+|   |   |-- 1000_bird.png
+|   |   |-- 1001_bird.png
+|   |   |-- ...
+|   |
+|   |-- ...
+|
+|-- val/ (optional)
+|   |-- airplane/
+|   |   |-- 105_airplane.png
+|   |   |-- 106_airplane.png
+|   |   |-- ...
+|   |
+|   |-- automobile/
+|   |   |-- 102_automobile.png
+|   |   |-- 103_automobile.png
+|   |   |-- ...
+|   |
+|   |-- bird/
+|   |   |-- 1045_bird.png
+|   |   |-- 1046_bird.png
+|   |   |-- ...
+|   |
+|   |-- ...
+```
+
+AI太好用了你们知道吗.jpg
+
+![image-20250915110447604](README.assets/image-20250915110447604.png)
+
+```
+python classify/train.py --model yolov5n-cls.pt --data 1-3data_sorted --epochs 100 --batch-size 8 --imgsz 224 --device '0'
+```
+
+另外需要配置CUDA使用gpu加速
+
+666VM普通版连不了GPU，cpu训慢的一
+
+![image-20250915123349816](README.assets/image-20250915123349816.png)
+
+windows下CUDA+PyTorch配置成功
+
+![image-20250915155029435](README.assets/image-20250915155029435.png)
+
+快的像起飞
+
+![image-20250915155734697](README.assets/image-20250915155734697.png)
+
+用**`tensorboard`**监控进度
+
+### 显示界面
+
+目标图
+
+<img src="README.assets/image-20250915130342475.png" alt="image-20250915130342475" style="zoom: 50%;" /><img src="README.assets/image-20250915130350625.png" alt="image-20250915130350625" style="zoom:50%;" />
+
+拟总写一个flag == 0的才存放右边信息，左边根据是通过拍摄进的还是搜索进的分别显示
+
+### 希卡之石初始界面
+
+在等模型训练，电脑飞烫写的，写了界面+触摸，感谢AI续写功能
+
+![image-20250915164144195](README.assets/image-20250915164144195.png)
 
 ## 更新日志
 
@@ -671,3 +801,9 @@ sensor = None
 - 图像采集
 - 按键控制
 - 查找功能和按键控制输入
+
+### 9.15
+
+- 部署YOLOv5进行数据集的训练
+- 编写详细界面
+- 希卡之石初始界面
