@@ -51,7 +51,7 @@ def display_test():
 
 
     img = image.Image(DISPLAY_WIDTH, DISPLAY_HEIGHT, image.RGB565)
-    src_img = image.Image("/data/pokedex.bmp")
+    pokedex_img = image.Image("/data/pokedex.bmp")
 
     # sensor加载
     sensor = Sensor()
@@ -71,6 +71,7 @@ def display_test():
         key3 = Pin(35, Pin.IN, pull=Pin.PULL_UP, drive=7) # 左
         key4 = Pin(34, Pin.IN, pull=Pin.PULL_UP, drive=7) # 右
         key5 = Pin(33, Pin.IN, pull=Pin.PULL_UP, drive=7) # 中
+        button = Pin(53, Pin.IN, Pin.PULL_DOWN)  # 使用下拉电阻
 
         last_key_state1=1
         last_key_state2=1
@@ -78,15 +79,19 @@ def display_test():
         last_key_state4=1
         last_key_state5=1
 
-        menu_collect = 3 # 当前选中哪个模式
+        menu_collect = 1 # 当前选中哪个模式
         chosen_color = 0
         input_text = ""
         key_chosen_flag = True
-        flag = 2 # 当前在哪个模式里 -1为初始
+        flag = 10 # 当前在哪个模式里 -1为初始
+
+        sheika_stone = 0 # 希卡之石模式 实际为flag = 10
+        super_earth = 0 # 战备呼叫模式 实际为flag = 20
+
         key_chosen=20 # 输入界面里的键位选择
         random_flag = 0 # 随机选择标志位
         pinyin_res_count=0
-        choose_flag=0
+        choose_flag=0 # 查询界面选择标记
         choose_pokemon=0
 
         # 触摸控制
@@ -106,18 +111,18 @@ def display_test():
             current_key_state3 = key3.value()
             current_key_state4 = key4.value()
             current_key_state5 = key5.value()
-            print(key1.value())
+
             #主界面
             if flag == -1:
                 img.clear()
                 img.draw_string_advanced(95, 25, 80, "NAUTILUS-PRIME", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                 img.draw_string_advanced(265, 385, 30, "Press Any Key to Start", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                 img.draw_string_advanced(225, 425, 40, "Presented by Zaphkiel", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_image(src_img, 310, 170, 1.5, 1.5,alpha=256)
+                img.draw_image(pokedex_img, 310, 170, 1.5, 1.5,alpha=256)
                 #暂时无效，原因未知，只能用Display
                 #改变了img通道后完全解决
                 #if flag == -1:
-                    #Display.show_image(src_img,x=350,y=200,layer = Display.LAYER_OSD1)
+                    #Display.show_image(pokedex_img,x=350,y=200,layer = Display.LAYER_OSD1)
 
                 # 触摸控制
                 p = tp.read()
@@ -239,7 +244,6 @@ def display_test():
                 count=0
                 for row, key_row in enumerate(keys):
                     for col, the_key in enumerate(key_row):
-                        print(key1.value())
                         if count!=19:
                             count+=1
                         else:
@@ -371,11 +375,190 @@ def display_test():
                     del attributes
                 del pinyin_results
                 gc.collect()
-
+            # 拍摄模式
             if flag == 1:
                 sensor.run()
                 img.clear()
-                img = sensor.snapshot(chn=CAM_CHN_ID_0)
+                # 单独提取拍摄图像
+                captured_img = sensor.snapshot(chn=CAM_CHN_ID_0)
+                img.draw_image(captured_img,0,0)
+            # 详细信息模式
+            if flag == 0:
+                img.clear()
+
+            if flag == 10:
+                img.clear()
+                img.draw_string_advanced(200, 15, 60, "SHEIKA-STONE", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(265, 385, 30, "Press Any Key to Start", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(180, 425, 40, "Please Choose A Function", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_image(pokedex_img, 310, 170, 1.5, 1.5,alpha=256)
+
+                # 触摸控制
+                p = tp.read()
+                if p != () and can_touch == 1:
+                    can_touch = 0
+                    # 区域1: Clock (180,100,120,80) → x:180-300, y:100-180
+                    if p[0].x > 180 and p[0].x < 180+120 and p[0].y > 100 and p[0].y < 100+80:
+                        if menu_collect != 1:
+                            menu_collect = 1
+                        else:
+                            flag = 11
+                    # 区域2: Cam (120,200,120,80) → x:120-240, y:200-280
+                    if p[0].x > 120 and p[0].x < 120+120 and p[0].y > 200 and p[0].y < 200+80:
+                        if menu_collect != 2:
+                            menu_collect = 2
+                        else:
+                            flag = 12
+                    # 区域3: Temp (180,300,120,80) → x:180-300, y:300-380
+                    if p[0].x > 180 and p[0].x < 180+120 and p[0].y > 300 and p[0].y < 300+80:
+                        if menu_collect != 3:
+                            menu_collect = 3
+                        else:
+                            flag = 13
+                    # 区域4: Mag (510,100,120,80) → x:510-630, y:100-180
+                    if p[0].x > 510 and p[0].x < 510+120 and p[0].y > 100 and p[0].y < 100+80:
+                        if menu_collect != 4:
+                            menu_collect = 4
+                        else:
+                            flag = 14
+                    # 区域5: Music (570,200,120,80) → x:570-690, y:200-280
+                    if p[0].x > 570 and p[0].x < 570+120 and p[0].y > 200 and p[0].y < 200+80:
+                        if menu_collect != 5:
+                            menu_collect = 5
+                        else:
+                            flag = 15
+                    # 区域6: Bomb (510,300,120,80) → x:510-630, y:300-380
+                    if p[0].x > 510 and p[0].x < 510+120 and p[0].y > 300 and p[0].y < 300+80:
+                        if menu_collect != 6:
+                            menu_collect = 6
+                        else:
+                            flag = 16
+
+
+                chosen_color=255
+
+                # 选中视觉效果
+                if menu_collect == 1:
+                    img.draw_rectangle(180, 100, 120, 80, color=(chosen_color, chosen_color, chosen_color), fill=True)
+                    img.draw_string_advanced(190, 100, 45, "Clock", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(180, 100, 120, 80,color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
+
+                    img.draw_rectangle(120, 200, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(130, 200, 45, "Cam", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(180, 300, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(190, 300, 45, "Temp", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(510, 100, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 100, 50, "Mag", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(570, 200, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(580, 200, 45, "Music", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(510, 300, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 300, 45, "Bomb", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                if menu_collect == 2:
+                    img.draw_rectangle(180, 100, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(190, 100, 45, "Clock", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(120, 200, 120, 80, color=(chosen_color, chosen_color, chosen_color), fill=True)
+                    img.draw_string_advanced(130, 200, 45, "Cam", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(120, 200, 120, 80, color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
+
+                    img.draw_rectangle(180, 300, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(190, 300, 45, "Temp", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(510, 100, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 100, 50, "Mag", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(570, 200, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(580, 200, 45, "Music", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(510, 300, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 300, 45, "Bomb", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                if menu_collect == 3:
+                    img.draw_rectangle(180, 100, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(190, 100, 45, "Clock", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(120, 200, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(130, 200, 45, "Cam", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(180, 300, 120, 80, color=(chosen_color, chosen_color, chosen_color), fill=True)
+                    img.draw_string_advanced(190, 300, 45, "Temp", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(180, 300, 120, 80, color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
+
+                    img.draw_rectangle(510, 100, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 100, 50, "Mag", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(570, 200, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(580, 200, 45, "Music", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(510, 300, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 300, 45, "Bomb", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                if menu_collect == 4:
+                    img.draw_rectangle(180, 100, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(190, 100, 45, "Clock", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(120, 200, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(130, 200, 45, "Cam", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(180, 300, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(190, 300, 45, "Temp", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(510, 100, 120, 80, color=(chosen_color, chosen_color, chosen_color), fill=True)
+                    img.draw_string_advanced(519, 100, 50, "Mag", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(510, 100, 120, 80, color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
+
+                    img.draw_rectangle(570, 200, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(580, 200, 45, "Music", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(510, 300, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 300, 45, "Bomb", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                if menu_collect == 5:
+                    img.draw_rectangle(180, 100, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(190, 100, 45, "Clock", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(120, 200, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(130, 200, 45, "Cam", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(180, 300, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(190, 300, 45, "Temp", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(510, 100, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 100, 50, "Mag", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(570, 200, 120, 80, color=(chosen_color, chosen_color, chosen_color), fill=True)
+                    img.draw_string_advanced(580, 200, 45, "Music", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(570, 200, 120, 80, color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
+
+                    img.draw_rectangle(510, 300, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 300, 45, "Bomb", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                if menu_collect == 6:
+                    img.draw_rectangle(180, 100, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(190, 100, 45, "Clock", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(120, 200, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(130, 200, 45, "Cam", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(180, 300, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(190, 300, 45, "Temp", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(510, 100, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 100, 50, "Mag", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(570, 200, 120, 80, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(580, 200, 45, "Music", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(510, 300, 120, 80, color=(chosen_color, chosen_color, chosen_color), fill=True)
+                    img.draw_string_advanced(519, 300, 45, "Bomb", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_rectangle(510, 300, 120, 80, color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
+
+
 
             # 确认键
             if current_key_state5 == 0 and last_key_state5 == 1:
@@ -409,6 +592,130 @@ def display_test():
                     elif key_chosen<0:
                         flag=0
                         choose_flag=1
+                elif flag==1:
+                    # 拍摄进入展示界面
+                    flag = 0                
+
+                    # read_init_flag0=1
+                    # form_num=0
+
+                    # gc.collect()
+
+                    # # 加载KPU（神经网络处理器）模型（从Flash指定地址加载，可能是宝可梦识别模型）
+                    # task = kpu.load_flash(0x300000,0, 0, 60000000)
+
+                    # # 对图像（captured_img）执行推理，得到识别结果fmap
+                    # fmap = kpu.forward(task, captured_img)
+                    # plist=fmap[:]  # 提取所有类别的概率值列表
+                    # pmax=sorted(plist)[-5:]  # 取概率最高的5个值
+                    # pmax.reverse()  # 从高到低排序
+                    # max_pokemon=plist.index(max(plist))  # 找到概率最高的宝可梦索引
+                    # max_pokemon_name=pokemon_linkname[max_index].strip()  # 获取对应的名称
+
+                    # k=pokemon_linkname.index(max_pokemon_name)+1
+                    # x=str(k)
+                    # x='0'*(4-len(x))+x
+                    # linkname=max_pokemon_name
+
+                    img.draw_image(captured_img, 5, 5, 0.5, 0.5, alpha=256)
+                    img.draw_string_advanced(5,125,30 ,b'识别结果:', color=(250, 250, 250))
+
+                    # for i in range(5):
+                    #     max_index=plist.index(pmax[i])
+                    #     img.draw_string(5,145+i*16,"%s(%.2f%%)"%(pokemon_linkname[max_index].strip(),pmax[i]*100),scale=1,color=(40*i, 250-50*i, 160+10*i))
+                    #     #comm.send_classify_result(pmax[i], max_index, pokemon_linkname[max_index].strip())
+
+                    # del pmax
+                    # del plist
+                    # del fmap
+                    # del captured_img
+                    # kpu.deinit(task)
+                    # del task
+
+                    # gc.collect()
+                # 之后可配置切换信息
+                elif choose_flag == 1:
+                    choose_flag=0
+                    key_chosen=20
+                    input_text = ""
+                    k=choose_pokemon+1
+
+                    x=str(k)
+                    x='0'*(4-len(x))+x
+                    linkname=pokemon_linkname[k-1]
+
+                if k<=151:
+                    gen=1
+                elif k<=251:
+                    gen=2
+                elif k<=386:
+                    gen=3
+                elif k<=493:
+                    gen=4
+                elif k<=649:
+                    gen=5
+                elif k<=721:
+                    gen=6
+                elif k<=809:
+                    gen=7
+                elif k<=905:
+                    gen=8
+                else:
+                    gen=9
+
+                file_path="/data/gen"+str(gen)+"/"+x+linkname+"/inform.txt"
+
+                with open(file_path, "r",encoding='utf-8') as f:
+                    data = f.readlines()
+                    pokename=eval(data[0])
+                    attributes=eval(data[1])
+                    categories=eval(data[2])
+                    special=eval(data[3])
+                    height=data[4].strip()
+                    weight=data[5].strip()
+                    pokecolor=data[6].strip()
+                    data1=eval(data[7])
+                    gif_count=int(data[8])
+
+                del data
+                gc.collect()
+
+                # 形态切换
+                if form_flag==1:
+                    form_flag=0
+                    form_num+=1
+                    form_path="/data/gen"+str(gen)+"/"+x+linkname+"/form/form_info/"+str(form_num)+".txt"
+                    try:
+                        with open(form_path, "r",encoding='utf-8') as f:
+                            data = f.readlines()
+                            formname=eval(data[0])[1]
+                            attributes=eval(data[1])
+                            categories=data[2].strip()
+                            special=eval(data[3])
+                            height=data[4].strip()
+                            weight=data[5].strip()
+                            pokecolor=data[6].strip()
+                            data1=eval(data[7])
+                        form_show_flag=1
+                    except:
+                        try:
+                            form_num=0
+                            form_path="/data/gen"+str(gen)+"/"+x+linkname+"/form/form_info/0.txt"
+                            with open(form_path, "r",encoding='utf-8') as f:
+                                data = f.readlines()
+                                formname=eval(data[0])[1]
+                                attributes=eval(data[1])
+                                categories=data[2].strip()
+                                special=eval(data[3])
+                                height=data[4].strip()
+                                weight=data[5].strip()
+                                pokecolor=data[6].strip()
+                                data1=eval(data[7])
+                            form_show_flag=1
+                        except:
+                            form_num=0
+
+                
 
 
             # 上
@@ -559,6 +866,11 @@ def display_test():
                             key_chosen=21
                         else:
                             key_chosen=key_chosen+1
+
+            # 返回
+            if button.value() == 1:
+                if flag == 1 or flag == 2:
+                    flag = -1
 
 
             last_key_state1 = current_key_state1
