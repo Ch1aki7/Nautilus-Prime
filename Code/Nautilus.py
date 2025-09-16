@@ -98,7 +98,7 @@ def display_test():
         key_chosen_flag = True
         flag = -1 # 当前在哪个模式里 -1为初始
 
-        sheika_stone = 0 # 希卡之石模式 实际为flag = 10
+        sheikah_stone = 0 # 希卡之石模式 实际为flag = 10
         super_earth = 0 # 战备呼叫模式 实际为flag = 20
 
         key_chosen=20 # 输入界面里的键位选择
@@ -108,6 +108,7 @@ def display_test():
         choose_pokemon=0
         yolo_flag = 0 # 推理标记
 
+        read_init_flag = 0 # 详情界面标记
         linkname = "" # 存储res[0]
 
         # 触摸控制
@@ -236,6 +237,9 @@ def display_test():
                     img.draw_string_advanced(519, 270, 53, "Super", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_string_advanced(519, 320, 53, "  Earth", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_rectangle(510, 280, 180, 100, color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
+                else:
+                    menu_collect = 1
+
 
             # 进入查找模式
             if flag == 2 and key_chosen_flag:
@@ -399,8 +403,8 @@ def display_test():
                 captured_img = sensor.snapshot(chn=CAM_CHN_ID_0)
                 img.draw_image(captured_img,0,0,0.4167,0.4167 )
 
-            # 详细信息模式
-            if flag == 0 and yolo_flag == 1:
+            # 识图模式
+            if flag == 0 and yolo_flag == 1 and read_init_flag == 0:
                 yolo_flag = 0
                 print(gc.mem_free())
                 img.clear()
@@ -431,9 +435,15 @@ def display_test():
                 yolo.deinit()
                 gc.collect()
 
+            
+
+            elif read_init_flag == 1:
+                img.clear()
+                img.draw_image(captured_img, 5, 5, 0.2, 0.2, alpha=256)
+
             if flag == 10:
                 img.clear()
-                img.draw_string_advanced(200, 15, 60, "SHEIKA-STONE", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(200, 15, 60, "SHEIKAH-STONE", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                 img.draw_string_advanced(265, 385, 30, "Press Any Key to Start", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                 img.draw_string_advanced(180, 425, 40, "Please Choose A Function", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                 img.draw_image(pokedex_img, 310, 170, 1.5, 1.5,alpha=256)
@@ -642,8 +652,11 @@ def display_test():
                     flag = 0
                     captured_img.save("/data/test/0001.jpg")
                     yolo_flag = 1
-                    # read_init_flag0=1
                     # form_num=0
+
+                # 识图进入详情界面
+                elif flag==0:
+                    read_init_flag=1
 
                 # 之后可配置切换信息
                 # elif choose_flag == 1:
@@ -958,6 +971,7 @@ def display_test():
             if button.value() == 1:
                 if flag == 0 or flag == 1 or flag == 2 or flag == 10:
                     flag = -1
+                    read_init_flag = 0
                 elif flag == 11 or flag == 12 or flag == 13 or flag == 14 or flag == 15 or flag == 16:
                     flag = 10
 
