@@ -8,10 +8,21 @@ from machine import Pin
 from machine import FPIOA
 from machine import Timer
 
+# AI识别模块
+from libs.YOLO import YOLOv5
+from libs.Utils import *
+import os,sys,gc
+import ulab.numpy as np
+import image
+
 DISPLAY_WIDTH = ALIGN_UP(800, 16)  # 800 对齐后仍为 800（800 % 16 = 0）
 DISPLAY_HEIGHT = 480               # 固定高度 480
 
-can_touch = 1;
+kmodel_path="/data/best.kmodel"
+model_input_size=[224,224]
+confidence_threshold = 0
+
+can_touch = 1
 
 sensor_id = 2
 sensor = None
@@ -42,9 +53,11 @@ def timer_callback(t):
 
 def display_test():
     print("display test")
+    print(gc.mem_free())
     #init_uart()
     # 2查询功能的变量数组
     labels=['abra', 'aerodactyl', 'alakazam', 'arbok', 'arcanine', 'articuno', 'beedrill', 'bellsprout', 'blastoise', 'bulbasaur', 'butterfree', 'caterpie', 'chansey', 'charizard', 'charmander', 'charmeleon', 'clefable', 'clefairy', 'cloyster', 'cubone', 'dewgong', 'diglett', 'ditto', 'dodrio', 'doduo', 'dragonair', 'dragonite', 'dratini', 'drowzee', 'dugtrio', 'eevee', 'ekans', 'electabuzz', 'electrode', 'exeggcute', 'exeggutor', 'farfetchd', 'fearow', 'flareon', 'gastly', 'gengar', 'geodude', 'gloom', 'golbat', 'goldeen', 'golduck', 'golem', 'graveler', 'grimer', 'growlithe', 'gyarados', 'haunter', 'hitmonchan', 'hitmonlee', 'horsea', 'hypno', 'ivysaur', 'jigglypuff', 'jolteon', 'jynx', 'kabuto', 'kabutops', 'kadabra', 'kakuna', 'kangaskhan', 'kingler', 'koffing', 'krabby', 'lapras', 'lickitung', 'machamp', 'machoke', 'machop', 'magikarp', 'magmar', 'magnemite', 'magneton', 'mankey', 'marowak', 'meowth', 'metapod', 'mew', 'mewtwo', 'moltres', 'mr-mime', 'muk', 'nidoking', 'nidoqueen', 'nidoran-f', 'nidoran-m', 'nidorina', 'nidorino', 'ninetales', 'oddish', 'omanyte', 'omastar', 'onix', 'paras', 'parasect', 'persian', 'pidgeot', 'pidgeotto', 'pidgey', 'pikachu', 'pinsir', 'poliwag', 'poliwhirl', 'poliwrath', 'ponyta', 'porygon', 'primeape', 'psyduck', 'raichu', 'rapidash', 'raticate', 'rattata', 'rhydon', 'rhyhorn', 'sandshrew', 'sandslash', 'scyther', 'seadra', 'seaking', 'seel', 'shellder', 'slowbro', 'slowpoke', 'snorlax', 'spearow', 'squirtle', 'starmie', 'staryu', 'tangela', 'tauros', 'tentacool', 'tentacruel', 'vaporeon', 'venomoth', 'venonat', 'venusaur', 'victreebel', 'vileplume', 'voltorb', 'vulpix', 'wartortle', 'weedle', 'weepinbell', 'weezing', 'wigglytuff', 'zapdos', 'zubat']
+    pokemon_lables = [f"{i:04d}" for i in range(1, 387)]
     pokemon_linkname=['bulbasaur', 'ivysaur', 'venusaur', 'charmander', 'charmeleon', 'charizard', 'squirtle', 'wartortle', 'blastoise', 'caterpie', 'metapod', 'butterfree', 'weedle', 'kakuna', 'beedrill', 'pidgey', 'pidgeotto', 'pidgeot', 'rattata', 'raticate', 'spearow', 'fearow', 'ekans', 'arbok', 'pikachu', 'raichu', 'sandshrew', 'sandslash', 'nidoran-f', 'nidorina', 'nidoqueen', 'nidoran-m', 'nidorino', 'nidoking', 'clefairy', 'clefable', 'vulpix', 'ninetales', 'jigglypuff', 'wigglytuff', 'zubat', 'golbat', 'oddish', 'gloom', 'vileplume', 'paras', 'parasect', 'venonat', 'venomoth', 'diglett', 'dugtrio', 'meowth', 'persian', 'psyduck', 'golduck', 'mankey', 'primeape', 'growlithe', 'arcanine', 'poliwag', 'poliwhirl', 'poliwrath', 'abra', 'kadabra', 'alakazam', 'machop', 'machoke', 'machamp', 'bellsprout', 'weepinbell', 'victreebel', 'tentacool', 'tentacruel', 'geodude', 'graveler', 'golem', 'ponyta', 'rapidash', 'slowpoke', 'slowbro', 'magnemite', 'magneton', 'farfetchd', 'doduo', 'dodrio', 'seel', 'dewgong', 'grimer', 'muk', 'shellder', 'cloyster', 'gastly', 'haunter', 'gengar', 'onix', 'drowzee', 'hypno', 'krabby', 'kingler', 'voltorb', 'electrode', 'exeggcute', 'exeggutor', 'cubone', 'marowak', 'hitmonlee', 'hitmonchan', 'lickitung', 'koffing', 'weezing', 'rhyhorn', 'rhydon', 'chansey', 'tangela', 'kangaskhan', 'horsea', 'seadra', 'goldeen', 'seaking', 'staryu', 'starmie', 'mr-mime', 'scyther', 'jynx', 'electabuzz', 'magmar', 'pinsir', 'tauros', 'magikarp', 'gyarados', 'lapras', 'ditto', 'eevee', 'vaporeon', 'jolteon', 'flareon', 'porygon', 'omanyte', 'omastar', 'kabuto', 'kabutops', 'aerodactyl', 'snorlax', 'articuno', 'zapdos', 'moltres', 'dratini', 'dragonair', 'dragonite', 'mewtwo', 'mew', 'chikorita', 'bayleef', 'meganium', 'cyndaquil', 'quilava', 'typhlosion', 'totodile', 'croconaw', 'feraligatr', 'sentret', 'furret', 'hoothoot', 'noctowl', 'ledyba', 'ledian', 'spinarak', 'ariados', 'crobat', 'chinchou', 'lanturn', 'pichu', 'cleffa', 'igglybuff', 'togepi', 'togetic', 'natu', 'xatu', 'mareep', 'flaaffy', 'ampharos', 'bellossom', 'marill', 'azumarill', 'sudowoodo', 'politoed', 'hoppip', 'skiploom', 'jumpluff', 'aipom', 'sunkern', 'sunflora', 'yanma', 'wooper', 'quagsire', 'espeon', 'umbreon', 'murkrow', 'slowking', 'misdreavus', 'unown', 'wobbuffet', 'girafarig', 'pineco', 'forretress', 'dunsparce', 'gligar', 'steelix', 'snubbull', 'granbull', 'qwilfish', 'scizor', 'shuckle', 'heracross', 'sneasel', 'teddiursa', 'ursaring', 'slugma', 'magcargo', 'swinub', 'piloswine', 'corsola', 'remoraid', 'octillery', 'delibird', 'mantine', 'skarmory', 'houndour', 'houndoom', 'kingdra', 'phanpy', 'donphan', 'porygon2', 'stantler', 'smeargle', 'tyrogue', 'hitmontop', 'smoochum', 'elekid', 'magby', 'miltank', 'blissey', 'raikou', 'entei', 'suicune', 'larvitar', 'pupitar', 'tyranitar', 'lugia', 'ho-oh', 'celebi', 'treecko', 'grovyle', 'sceptile', 'torchic', 'combusken', 'blaziken', 'mudkip', 'marshtomp', 'swampert', 'poochyena', 'mightyena', 'zigzagoon', 'linoone', 'wurmple', 'silcoon', 'beautifly', 'cascoon', 'dustox', 'lotad', 'lombre', 'ludicolo', 'seedot', 'nuzleaf', 'shiftry', 'taillow', 'swellow', 'wingull', 'pelipper', 'ralts', 'kirlia', 'gardevoir', 'surskit', 'masquerain', 'shroomish', 'breloom', 'slakoth', 'vigoroth', 'slaking', 'nincada', 'ninjask', 'shedinja', 'whismur', 'loudred', 'exploud', 'makuhita', 'hariyama', 'azurill', 'nosepass', 'skitty', 'delcatty', 'sableye', 'mawile', 'aron', 'lairon', 'aggron', 'meditite', 'medicham', 'electrike', 'manectric', 'plusle', 'minun', 'volbeat', 'illumise', 'roselia', 'gulpin', 'swalot', 'carvanha', 'sharpedo', 'wailmer', 'wailord', 'numel', 'camerupt', 'torkoal', 'spoink', 'grumpig', 'spinda', 'trapinch', 'vibrava', 'flygon', 'cacnea', 'cacturne', 'swablu', 'altaria', 'zangoose', 'seviper', 'lunatone', 'solrock', 'barboach', 'whiscash', 'corphish', 'crawdaunt', 'baltoy', 'claydol', 'lileep', 'cradily', 'anorith', 'armaldo', 'feebas', 'milotic', 'castform', 'kecleon', 'shuppet', 'banette', 'duskull', 'dusclops', 'tropius', 'chimecho', 'absol', 'wynaut', 'snorunt', 'glalie', 'spheal', 'sealeo', 'walrein', 'clamperl', 'huntail', 'gorebyss', 'relicanth', 'luvdisc', 'bagon', 'shelgon', 'salamence', 'beldum', 'metang', 'metagross', 'regirock', 'regice', 'registeel', 'latias', 'latios', 'kyogre', 'groudon', 'rayquaza', 'jirachi', 'deoxys']
     colors=[('红色',243,82,82),('蓝色',148,219,238),('绿色',170,209,94),('黄色',255,255,153),('紫色',197,150,189),('粉红色',255,221,255),('褐色',204,153,102),('黑色',187,187,187),('灰色',238,238,238),('白色',255,255,255)]
     values=[('一般',187,187,170),('格斗',187,85,68),('飞行',129,185,199),('毒',170,85,153),('地面',221,187,85),('岩石',187,170,102),('虫',170,187,34),('幽灵',142,142,187),('钢',170,170,187),('火',255,68,34),('水',51,153,255),('草',119,204,85),('电',255,204,51),('超能力',255,85,153),('冰',119,221,245),('龙',179,102,238),('恶',119,85,68),('妖精',255,170,255)]
@@ -56,13 +69,13 @@ def display_test():
     # sensor加载
     sensor = Sensor()
     sensor.reset()
-    sensor.set_framesize(width=DISPLAY_WIDTH, height=DISPLAY_HEIGHT, chn=CAM_CHN_ID_0)
+    sensor.set_framesize(width=1920, height=1080, chn=CAM_CHN_ID_0)
     sensor.set_pixformat(Sensor.RGB565, chn=CAM_CHN_ID_0)
-    
+
     Display.init(Display.ST7701, width = DISPLAY_WIDTH, height = DISPLAY_HEIGHT, to_ide = True)
     MediaManager.init()
 
-    
+
 
     try:
         # 按键实例化
@@ -83,7 +96,7 @@ def display_test():
         chosen_color = 0
         input_text = ""
         key_chosen_flag = True
-        flag = 10 # 当前在哪个模式里 -1为初始
+        flag = 1 # 当前在哪个模式里 -1为初始
 
         sheika_stone = 0 # 希卡之石模式 实际为flag = 10
         super_earth = 0 # 战备呼叫模式 实际为flag = 20
@@ -93,6 +106,7 @@ def display_test():
         pinyin_res_count=0
         choose_flag=0 # 查询界面选择标记
         choose_pokemon=0
+        yolo_flag = 0 # 推理标记
 
         # 触摸控制
         tp = TOUCH(0)
@@ -381,10 +395,26 @@ def display_test():
                 img.clear()
                 # 单独提取拍摄图像
                 captured_img = sensor.snapshot(chn=CAM_CHN_ID_0)
-                img.draw_image(captured_img,0,0)
+                img.draw_image(captured_img,0,0,0.4167,0.4167 )
+
             # 详细信息模式
-            if flag == 0:
+            if flag == 0 and yolo_flag == 1:
+                yolo_flag = 0
+                print(gc.mem_free())
                 img.clear()
+                img.draw_image(captured_img, 5, 5, 0.5, 0.5, alpha=256)
+                img.draw_string_advanced(5,125,30 ,b'识别结果:', color=(250, 250, 250))
+                test_img , test_img_ori= read_image("/data/test/0001.jpg")
+                rgb888p_size=[test_img.shape[2],test_img.shape[1]]
+                yolo=YOLOv5(task_type="classify",mode="image",kmodel_path=kmodel_path,labels=pokemon_lables,rgb888p_size=rgb888p_size,model_input_size=model_input_size,conf_thresh=confidence_threshold,debug_mode=0)
+                yolo.config_preprocess()
+
+                img.draw_image(test_img_ori, 100, 5, 0.5, 0.5, alpha=256)
+                res=yolo.run(test_img)
+                yolo.draw_result(res,test_img_ori)
+
+                yolo.deinit()
+                gc.collect()
 
             if flag == 10:
                 img.clear()
@@ -594,8 +624,9 @@ def display_test():
                         choose_flag=1
                 elif flag==1:
                     # 拍摄进入展示界面
-                    flag = 0                
-
+                    flag = 0
+                    captured_img.save("/data/test/0001.jpg")
+                    yolo_flag = 1
                     # read_init_flag0=1
                     # form_num=0
 
@@ -617,8 +648,7 @@ def display_test():
                     # x='0'*(4-len(x))+x
                     # linkname=max_pokemon_name
 
-                    img.draw_image(captured_img, 5, 5, 0.5, 0.5, alpha=256)
-                    img.draw_string_advanced(5,125,30 ,b'识别结果:', color=(250, 250, 250))
+
 
                     # for i in range(5):
                     #     max_index=plist.index(pmax[i])
@@ -634,88 +664,113 @@ def display_test():
 
                     # gc.collect()
                 # 之后可配置切换信息
-                elif choose_flag == 1:
-                    choose_flag=0
-                    key_chosen=20
-                    input_text = ""
-                    k=choose_pokemon+1
+                # elif choose_flag == 1:
+                #     choose_flag=0
+                #     key_chosen=20
+                #     input_text = ""
+                #     k=choose_pokemon+1
 
-                    x=str(k)
-                    x='0'*(4-len(x))+x
-                    linkname=pokemon_linkname[k-1]
+                #     x=str(k)
+                #     x='0'*(4-len(x))+x
+                #     linkname=pokemon_linkname[k-1]
+                # # 注意模型未导入时k未定义，按键进入状态会报错
+                # if k<=151:
+                #     gen=1
+                # elif k<=251:
+                #     gen=2
+                # elif k<=386:
+                #     gen=3
+                # elif k<=493:
+                #     gen=4
+                # elif k<=649:
+                #     gen=5
+                # elif k<=721:
+                #     gen=6
+                # elif k<=809:
+                #     gen=7
+                # elif k<=905:
+                #     gen=8
+                # else:
+                #     gen=9
 
-                if k<=151:
-                    gen=1
-                elif k<=251:
-                    gen=2
-                elif k<=386:
-                    gen=3
-                elif k<=493:
-                    gen=4
-                elif k<=649:
-                    gen=5
-                elif k<=721:
-                    gen=6
-                elif k<=809:
-                    gen=7
-                elif k<=905:
-                    gen=8
-                else:
-                    gen=9
+                # file_path="/data/gen"+str(gen)+"/"+x+linkname+"/inform.txt"
 
-                file_path="/data/gen"+str(gen)+"/"+x+linkname+"/inform.txt"
+                # with open(file_path, "r",encoding='utf-8') as f:
+                #     data = f.readlines()
+                #     pokename=eval(data[0])
+                #     attributes=eval(data[1])
+                #     categories=eval(data[2])
+                #     special=eval(data[3])
+                #     height=data[4].strip()
+                #     weight=data[5].strip()
+                #     pokecolor=data[6].strip()
+                #     data1=eval(data[7])
+                #     gif_count=int(data[8])
 
-                with open(file_path, "r",encoding='utf-8') as f:
-                    data = f.readlines()
-                    pokename=eval(data[0])
-                    attributes=eval(data[1])
-                    categories=eval(data[2])
-                    special=eval(data[3])
-                    height=data[4].strip()
-                    weight=data[5].strip()
-                    pokecolor=data[6].strip()
-                    data1=eval(data[7])
-                    gif_count=int(data[8])
+                # del data
+                # gc.collect()
 
-                del data
-                gc.collect()
+                # # 形态切换
+                # if form_flag==1:
+                #     form_flag=0
+                #     form_num+=1
+                #     form_path="/data/gen"+str(gen)+"/"+x+linkname+"/form/form_info/"+str(form_num)+".txt"
+                #     try:
+                #         with open(form_path, "r",encoding='utf-8') as f:
+                #             data = f.readlines()
+                #             formname=eval(data[0])[1]
+                #             attributes=eval(data[1])
+                #             categories=data[2].strip()
+                #             special=eval(data[3])
+                #             height=data[4].strip()
+                #             weight=data[5].strip()
+                #             pokecolor=data[6].strip()
+                #             data1=eval(data[7])
+                #         form_show_flag=1
+                #     except:
+                #         try:
+                #             form_num=0
+                #             form_path="/data/gen"+str(gen)+"/"+x+linkname+"/form/form_info/0.txt"
+                #             with open(form_path, "r",encoding='utf-8') as f:
+                #                 data = f.readlines()
+                #                 formname=eval(data[0])[1]
+                #                 attributes=eval(data[1])
+                #                 categories=data[2].strip()
+                #                 special=eval(data[3])
+                #                 height=data[4].strip()
+                #                 weight=data[5].strip()
+                #                 pokecolor=data[6].strip()
+                #                 data1=eval(data[7])
+                #             form_show_flag=1
+                #         except:
+                #             form_num=0
 
-                # 形态切换
-                if form_flag==1:
-                    form_flag=0
-                    form_num+=1
-                    form_path="/data/gen"+str(gen)+"/"+x+linkname+"/form/form_info/"+str(form_num)+".txt"
-                    try:
-                        with open(form_path, "r",encoding='utf-8') as f:
-                            data = f.readlines()
-                            formname=eval(data[0])[1]
-                            attributes=eval(data[1])
-                            categories=data[2].strip()
-                            special=eval(data[3])
-                            height=data[4].strip()
-                            weight=data[5].strip()
-                            pokecolor=data[6].strip()
-                            data1=eval(data[7])
-                        form_show_flag=1
-                    except:
-                        try:
-                            form_num=0
-                            form_path="/data/gen"+str(gen)+"/"+x+linkname+"/form/form_info/0.txt"
-                            with open(form_path, "r",encoding='utf-8') as f:
-                                data = f.readlines()
-                                formname=eval(data[0])[1]
-                                attributes=eval(data[1])
-                                categories=data[2].strip()
-                                special=eval(data[3])
-                                height=data[4].strip()
-                                weight=data[5].strip()
-                                pokecolor=data[6].strip()
-                                data1=eval(data[7])
-                            form_show_flag=1
-                        except:
-                            form_num=0
+                # # 神秘标志位
+                # if not read_init_flag0==1:
+                #     if form_num==0:
+                #         evo_txt="/sd/gen"+str(gen)+"/"+x+linkname+"/evolution.txt"
+                #         evo_img="/sd/gen"+str(gen)+"/"+x+linkname+"/evolution/"
+                #         with open(evo_txt,'r') as f:
+                #             evolutions=eval(f.read().strip())
 
-                
+                #     elif int(x)==555 and (form_num==2 or form_num==3):
+                #         evo_txt="/sd/gen"+str(gen)+"/"+x+linkname+"/form/form_evo/evolution_form.txt"
+                #         evo_img="/sd/gen"+str(gen)+"/"+x+linkname+"/form/form_evo/"
+                #         with open(evo_txt,'r') as f:
+                #             evolutions=eval(f.read().strip())
+
+                #     elif form_num==1:
+                #         try:
+                #             evo_txt="/sd/gen"+str(gen)+"/"+x+linkname+"/form/form_evo/evolution_form.txt"
+                #             evo_img="/sd/gen"+str(gen)+"/"+x+linkname+"/form/form_evo/"
+                #             with open(evo_txt,'r') as f:
+                #                 evolutions=eval(f.read().strip())
+                #         except:
+                #             evo_txt="/sd/gen"+str(gen)+"/"+x+linkname+"/evolution.txt"
+                #             evo_img="/sd/gen"+str(gen)+"/"+x+linkname+"/evolution/"
+                #             with open(evo_txt,'r') as f:
+                #                 evolutions=eval(f.read().strip())
+
 
 
             # 上
@@ -916,11 +971,13 @@ def display_test():
                         menu_collect = 5
                     elif menu_collect == 6:
                         menu_collect = 6
-                        
+
             # 返回
             if button.value() == 1:
-                if flag == 1 or flag == 2:
+                if flag == 0 or flag == 1 or flag == 2 or flag == 10:
                     flag = -1
+                elif flag == 11 or flag == 12 or flag == 13 or flag == 14 or flag == 15 or flag == 16:
+                    flag = 10
 
 
             last_key_state1 = current_key_state1

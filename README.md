@@ -762,6 +762,72 @@ windows下CUDA+PyTorch配置成功
 
 用**`tensorboard`**监控进度
 
+上课训一半下课ctrl+c了，回去发现原文件不能resume，气笑了
+
+![image-20250916075800233](README.assets/image-20250916075800233.png)
+
+一晚上训练完
+
+```
+# windows平台：请自行安装dotnet-7并添加环境变量,支持使用pip在线安装nncase，但是nncase-kpu库需要离线安装，在https://github.com/kendryte/nncase/releases下载nncase_kpu-2.*-py2.py3-none-win_amd64.whl
+# 进入对应的python环境，在nncase_kpu-2.*-py2.py3-none-win_amd64.whl下载目录下使用pip安装
+pip install nncase_kpu-2.*-py2.py3-none-win_amd64.whl
+
+# 除nncase和nncase-kpu外，脚本还用到的其他库包括：
+pip install onnx
+pip install onnxruntime
+pip install onnxsim
+
+wget https://kendryte-download.canaan-creative.com/developer/k230/yolo_files/test_yolov5.zip
+unzip test_yolov5.zip
+
+# 导出onnx，pt模型路径请自行选择
+python export.py --weight runs/train-cls/exp/weights/best.pt --imgsz 224 --batch 1 --include onnx
+cd test_yolov5/classify
+# 转换kmodel,onnx模型路径请自行选择，生成的kmodel在onnx模型同级目录下
+python to_kmodel.py --target k230 --model ../../runs/train-cls/exp/weights/best.onnx --dataset ../test --input_width 224 --input_height 224 --ptq_option 0
+cd ../../
+```
+
+终于干完了
+
+![image-20250916101844918](README.assets/image-20250916101844918.png)
+
+接下来就是在K230上部署，测试代码如下：
+
+```
+from libs.YOLO import YOLOv5
+from libs.Utils import *
+import os,sys,gc
+import ulab.numpy as np
+import image
+
+if __name__=="__main__":
+    # 这里仅为示例，自定义场景请修改为您自己的测试图片、模型路径、标签名称、模型输入大小
+    img_path="/data/test/0094Gengar34.jpg"
+    kmodel_path="/data/best.kmodel"
+    labels = [f"{i:04d}" for i in range(1, 387)]
+    model_input_size=[224,224]
+
+    confidence_threshold = 0.5
+    img,img_ori=read_image(img_path)
+    rgb888p_size=[img.shape[2],img.shape[1]]
+    # 初始化YOLOv5实例
+    yolo=YOLOv5(task_type="classify",mode="image",kmodel_path=kmodel_path,labels=labels,rgb888p_size=rgb888p_size,model_input_size=model_input_size,conf_thresh=confidence_threshold,debug_mode=0)
+    yolo.config_preprocess()
+    res=yolo.run(img)
+    yolo.draw_result(res,img_ori)
+    yolo.deinit()
+    gc.collect()
+
+```
+
+<img src="README.assets/image-20250916105616299.png" alt="image-20250916105616299" style="zoom:67%;" /><img src="README.assets/image-20250916105636340.png" alt="image-20250916105636340" style="zoom:67%;" /><img src="README.assets/image-20250916105712289.png" alt="image-20250916105712289" style="zoom:67%;" />
+
+接下来就是集成到项目里进行代码编写了
+
+ps.用外接摄像头测试了几组图片，发现由于分辨率的问题，识别精度堪忧，需要良好的光照等情况，识别图像最好占满宽
+
 ### 显示界面
 
 目标图
@@ -775,6 +841,16 @@ windows下CUDA+PyTorch配置成功
 在等模型训练，电脑飞烫写的，写了界面+触摸，感谢AI续写功能
 
 ![image-20250915164144195](README.assets/image-20250915164144195.png)
+
+
+
+
+
+
+
+### 结合功能：摇一摇换人
+
+### 结合功能：识别成功时 LED 闪烁、蜂鸣器提示
 
 ## 更新日志
 
