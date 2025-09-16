@@ -96,7 +96,7 @@ def display_test():
         chosen_color = 0
         input_text = ""
         key_chosen_flag = True
-        flag = 1 # 当前在哪个模式里 -1为初始
+        flag = -1 # 当前在哪个模式里 -1为初始
 
         sheika_stone = 0 # 希卡之石模式 实际为flag = 10
         super_earth = 0 # 战备呼叫模式 实际为flag = 20
@@ -107,6 +107,8 @@ def display_test():
         choose_flag=0 # 查询界面选择标记
         choose_pokemon=0
         yolo_flag = 0 # 推理标记
+
+        linkname = "" # 存储res[0]
 
         # 触摸控制
         tp = TOUCH(0)
@@ -402,16 +404,29 @@ def display_test():
                 yolo_flag = 0
                 print(gc.mem_free())
                 img.clear()
-                img.draw_image(captured_img, 5, 5, 0.5, 0.5, alpha=256)
-                img.draw_string_advanced(5,125,30 ,b'识别结果:', color=(250, 250, 250))
+
+                
                 test_img , test_img_ori= read_image("/data/test/0001.jpg")
                 rgb888p_size=[test_img.shape[2],test_img.shape[1]]
                 yolo=YOLOv5(task_type="classify",mode="image",kmodel_path=kmodel_path,labels=pokemon_lables,rgb888p_size=rgb888p_size,model_input_size=model_input_size,conf_thresh=confidence_threshold,debug_mode=0)
                 yolo.config_preprocess()
 
                 img.draw_image(test_img_ori, 100, 5, 0.5, 0.5, alpha=256)
+                # 可知返回结果res为一个元组，分别代表序号和可信度(int)
                 res=yolo.run(test_img)
                 yolo.draw_result(res,test_img_ori)
+              
+                img.draw_image(captured_img, 5, 5, 0.5, 0.5, alpha=256)
+                img.draw_string_advanced(5,5,60 ,"识别结果:"+pokemon_linkname[res[0]]+'\n'+"可信度："+str(res[1]), color=(250, 250, 250), font = "/sdcard/res/font/ChillBitmap7x.ttf")
+                
+                # 这里可向串口发送数据，用于喇叭、LED等功能
+
+                # 由于不含0，k为实际编号
+                k=res[0]+1
+                x=str(k)
+                x='0'*(4-len(x))+x
+                linkname=res[0]
+
 
                 yolo.deinit()
                 gc.collect()
@@ -599,7 +614,7 @@ def display_test():
                     elif menu_collect==2:
                         flag=2
                     elif menu_collect==3:
-                        flag=3
+                        flag=10
                     elif menu_collect==4:
                         flag=4
 
@@ -630,39 +645,6 @@ def display_test():
                     # read_init_flag0=1
                     # form_num=0
 
-                    # gc.collect()
-
-                    # # 加载KPU（神经网络处理器）模型（从Flash指定地址加载，可能是宝可梦识别模型）
-                    # task = kpu.load_flash(0x300000,0, 0, 60000000)
-
-                    # # 对图像（captured_img）执行推理，得到识别结果fmap
-                    # fmap = kpu.forward(task, captured_img)
-                    # plist=fmap[:]  # 提取所有类别的概率值列表
-                    # pmax=sorted(plist)[-5:]  # 取概率最高的5个值
-                    # pmax.reverse()  # 从高到低排序
-                    # max_pokemon=plist.index(max(plist))  # 找到概率最高的宝可梦索引
-                    # max_pokemon_name=pokemon_linkname[max_index].strip()  # 获取对应的名称
-
-                    # k=pokemon_linkname.index(max_pokemon_name)+1
-                    # x=str(k)
-                    # x='0'*(4-len(x))+x
-                    # linkname=max_pokemon_name
-
-
-
-                    # for i in range(5):
-                    #     max_index=plist.index(pmax[i])
-                    #     img.draw_string(5,145+i*16,"%s(%.2f%%)"%(pokemon_linkname[max_index].strip(),pmax[i]*100),scale=1,color=(40*i, 250-50*i, 160+10*i))
-                    #     #comm.send_classify_result(pmax[i], max_index, pokemon_linkname[max_index].strip())
-
-                    # del pmax
-                    # del plist
-                    # del fmap
-                    # del captured_img
-                    # kpu.deinit(task)
-                    # del task
-
-                    # gc.collect()
                 # 之后可配置切换信息
                 # elif choose_flag == 1:
                 #     choose_flag=0
