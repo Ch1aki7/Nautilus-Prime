@@ -96,7 +96,7 @@ def display_test():
         chosen_color = 0
         input_text = ""
         key_chosen_flag = True
-        flag = -1 # 当前在哪个模式里 -1为初始
+        flag = 1 # 当前在哪个模式里 -1为初始
 
         sheikah_stone = 0 # 希卡之石模式 实际为flag = 10
         super_earth = 0 # 战备呼叫模式 实际为flag = 20
@@ -106,10 +106,13 @@ def display_test():
         pinyin_res_count=0
         choose_flag=0 # 查询界面选择标记
         choose_pokemon=0
-        yolo_flag = 0 # 推理标记
+        yolo_flag = 0 # 推理标记 
 
         read_init_flag = 0 # 详情界面标记
         linkname = "" # 存储res[0]
+        form_flag = 0 #区分宝可梦形态
+        form_num = 0
+
 
         # 触摸控制
         tp = TOUCH(0)
@@ -283,7 +286,7 @@ def display_test():
                 # 制作功能键 一二三行末尾分别是：(710,270)(650，340)(520，410)
                 if key_chosen==20:
                     img.draw_rectangle(650, 340, 120, key_height, color=(255, 255, 255),fill=True)
-                    #img.draw_string(650, 340, "Random", color=(0, 0, 0), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    #img.draw_string_advanced(650, 340, "Random", color=(0, 0, 0), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_string_advanced(660, 340, 30,"Random", color=(0, 0, 0), font="/sdcard/res/font/ChillBitmap7x.ttf")
                 else:
                     img.draw_rectangle(650, 340, 120, key_height, color=(255, 255, 255))
@@ -429,7 +432,7 @@ def display_test():
                 k=res[0]+1
                 x=str(k)
                 x='0'*(4-len(x))+x
-                linkname=res[0]
+                linkname=pokemon_linkname[k-1]
 
 
                 yolo.deinit()
@@ -437,9 +440,105 @@ def display_test():
 
             
 
-            elif read_init_flag == 1:
+            if read_init_flag == 1:
                 img.clear()
-                img.draw_image(captured_img, 5, 5, 0.2, 0.2, alpha=256)
+                img.draw_image(captured_img, 5, 5, 0.2, 0.2, alpha=256) # 缩放到左上角
+
+                if k<=151:
+                    gen=1
+                elif k<=251:
+                    gen=2
+                elif k<=386:
+                    gen=3
+                elif k<=493:
+                    gen=4
+                elif k<=649:
+                    gen=5
+                elif k<=721:
+                    gen=6
+                elif k<=809:
+                    gen=7
+                elif k<=905:
+                    gen=8
+                else:
+                    gen=9
+
+                file_path="/data/gen"+str(gen)+"/"+x+linkname+"/inform.txt"
+
+                with open(file_path, "r",encoding='utf-8') as f:
+                    data = f.readlines()
+                    pokename=eval(data[0])
+                    attributes=eval(data[1])
+                    categories=eval(data[2])
+                    special=eval(data[3])
+                    height=data[4].strip()
+                    weight=data[5].strip()
+                    pokecolor=data[6].strip()
+                    data1=eval(data[7])
+                    gif_count=int(data[8])
+
+                del data
+                gc.collect()
+
+                # 共有UI
+                img.draw_string_advanced(450,0,40,"%s %s"%(pokename[0],pokename[3]),color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                # 页脚
+                now_name=int(pokename[0].split('#')[-1])
+                img.draw_string_advanced(350,440,40,"0"*(4-len(str(now_name)))+"%s/1025"%(str(now_name)),color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                if now_name==1:
+                    pre_name=1025
+                    next_name=now_name+1
+                elif now_name==1025:
+                    pre_name=now_name-1
+                    next_name=1
+                else:
+                    pre_name=now_name-1
+                    next_name=now_name+1
+
+                backname=pokemon_linkname[pre_name-1]
+                img.draw_line(5, 460, 5, 480, color=(255,255,255), thickness=3)
+                img.draw_line(5, 470, 25, 480, color=(255,255,255), thickness=3)
+                img.draw_line(5, 470, 25, 460, color=(255,255,255), thickness=3)
+                img.draw_line(25, 460, 25, 480, color=(255,255,255), thickness=3)
+                img.draw_string_advanced(30,450,30,b"%s %s"%('#'+'0'*(4-len(str(pre_name)))+str(pre_name),backname),color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                forname=pokemon_linkname[next_name-1]
+                img.draw_line(795, 460, 795, 480, color=(255,255,255), thickness=3)
+                img.draw_line(795, 470, 775, 460, color=(255,255,255), thickness=3)
+                img.draw_line(795, 470, 775, 480, color=(255,255,255), thickness=3)
+                img.draw_line(775, 460, 775, 480, color=(255,255,255), thickness=3)
+                img.draw_string_advanced(770-28*len(forname.strip()),450,30,b"%s %s"%(forname,'#'+'0'*(4-len(str(next_name)))+str(next_name)),color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                # 对应颜色
+                for col in colors:
+                    if col[0]==pokecolor:
+                        img.draw_string_advanced(450,40,40,b"%s"%(pokename[1]),color=(col[1],col[2], col[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(790-45*len(pokename[2].strip()),40,40,b"%s"%(pokename[2]),color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                # 元素属性
+                attr_count=0
+                for attr in attributes:
+                    for value in values:
+                        if value[0]==attr:
+                            attr_count+=1
+                            if attr_count==1:
+                                img.draw_rectangle(450,90,120,60,(value[1],value[2],value[3]), thickness=3)
+                                if len(attr)==1:
+                                    img.draw_string_advanced(485,90,50,b"%s"%(attributes[0]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                                elif len(attr)==2:
+                                    img.draw_string_advanced(227,64,20,b"%s"%(attributes[0]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                                else:
+                                    img.draw_string_advanced(219,64,20,b"%s"%(attributes[0]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                            elif attr_count==2:
+                                img.draw_rectangle(585,90,120,60,(value[1],value[2],value[3]), thickness=3)
+                                if len(attr)==1:
+                                    img.draw_string_advanced(595,90,50,b"%s"%(attributes[1]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                                elif len(attr)==2:
+                                    img.draw_string_advanced(595,90,40,b"%s"%(attributes[1]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                                else:
+                                    img.draw_string_advanced(269,64,20,b"%s"%(attributes[1]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
 
             if flag == 10:
                 img.clear()
@@ -650,13 +749,18 @@ def display_test():
                 elif flag==1:
                     # 拍摄进入展示界面
                     flag = 0
-                    captured_img.save("/data/test/0001.jpg")
+                    captured_img.save("/data/test/debug.jpg") # 调试
                     yolo_flag = 1
                     # form_num=0
+
+
+
 
                 # 识图进入详情界面
                 elif flag==0:
                     read_init_flag=1
+
+
 
                 # 之后可配置切换信息
                 # elif choose_flag == 1:
