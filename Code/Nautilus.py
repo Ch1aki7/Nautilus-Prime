@@ -15,6 +15,9 @@ import os,sys,gc
 import ulab.numpy as np
 import image
 
+# 串口通信模块
+from machine import UART
+
 DISPLAY_WIDTH = ALIGN_UP(800, 16)  # 800 对齐后仍为 800（800 % 16 = 0）
 DISPLAY_HEIGHT = 480               # 固定高度 480
 
@@ -22,12 +25,11 @@ kmodel_path="/data/best.kmodel"
 model_input_size=[224,224]
 confidence_threshold = 0
 
-can_touch = 1
+time_flag = 1
 
 sensor_id = 2
 sensor = None
 
-#def init_uart():
 fpioa = FPIOA()
 
 # 上下左右中
@@ -36,6 +38,13 @@ fpioa.set_function(42, FPIOA.GPIO42)
 fpioa.set_function(35, FPIOA.GPIO35)
 fpioa.set_function(34, FPIOA.GPIO34)
 fpioa.set_function(33, FPIOA.GPIO33)
+
+# 串口收发
+fpioa.set_function(11, FPIOA.UART2_TXD)
+fpioa.set_function(12, FPIOA.UART2_RXD)
+uart = UART(UART.UART2, baudrate=115200, bits=UART.EIGHTBITS, parity=UART.PARITY_NONE, stop=UART.STOPBITS_ONE)
+uart_data = bytes([])
+uart_received = None
 
 # def display_init():
 #     Display.init(Display.ST7701, width = DISPLAY_WIDTH, height = DISPLAY_HEIGHT, to_ide = True)
@@ -48,8 +57,8 @@ fpioa.set_function(33, FPIOA.GPIO33)
 #     MediaManager.deinit()                    # 释放媒体资源（缓冲区等）
 
 def timer_callback(t):
-    global can_touch
-    can_touch = 1
+    global time_flag
+    time_flag = 1
 
 def display_test():
     print("display test")
@@ -64,6 +73,8 @@ def display_test():
 
 
     img = image.Image(DISPLAY_WIDTH, DISPLAY_HEIGHT, image.RGB565)
+    gif_img1 = image.Image(DISPLAY_WIDTH, DISPLAY_HEIGHT, image.RGB565)
+    gif_img2 = image.Image(DISPLAY_WIDTH, DISPLAY_HEIGHT, image.RGB565)
     pokedex_img = image.Image("/data/pokedex.bmp")
 
     # sensor加载
@@ -92,11 +103,11 @@ def display_test():
         last_key_state4=1
         last_key_state5=1
 
-        menu_collect = 1 # 当前选中哪个模式
+        menu_collect = 0 # 当前选中哪个模式
         chosen_color = 0
         input_text = ""
         key_chosen_flag = True
-        flag = 1 # 当前在哪个模式里 -1为初始
+        flag = -1 # 当前在哪个模式里 -1为初始
 
         sheikah_stone = 0 # 希卡之石模式 实际为flag = 10
         super_earth = 0 # 战备呼叫模式 实际为flag = 20
@@ -113,12 +124,15 @@ def display_test():
         form_flag = 0 #区分宝可梦形态
         form_num = 0
 
+        # 左右切换标志位
+        change_flag1 = 0
+        change_flag2 = 0
 
         # 触摸控制
         tp = TOUCH(0)
-        global can_touch
+        global time_flag
         tim = Timer(-1)
-        tim.init(period=1000, mode=Timer.PERIODIC, callback=timer_callback)
+        tim.init(period=5, mode=Timer.PERIODIC, callback=timer_callback)
 
 
         # 使用IDE的帧缓冲区作为显示输出
@@ -146,8 +160,8 @@ def display_test():
 
                 # 触摸控制
                 p = tp.read()
-                if p != () and can_touch == 1:
-                    can_touch = 0
+                if p != () and time_flag == 1:
+                    time_flag = 0
                     if p[0].x > 110 and p[0].x < 290 and p[0].y > 150 and p[0].y < 250:
                         if menu_collect != 1:
                             menu_collect = 1
@@ -173,6 +187,8 @@ def display_test():
 
                 # 选中视觉效果
                 if menu_collect == 1:
+                    uart_data=bytes([0xaa, 0x55, 0x00, 0x01])
+                    uart.write(uart_data)
                     img.draw_rectangle(110 , 150, 180, 100, color=(chosen_color, chosen_color, chosen_color), fill=True)
                     img.draw_string_advanced(118, 150, 45, "Pokemon", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_string_advanced(119, 180, 53, "Detect", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
@@ -190,6 +206,8 @@ def display_test():
                     img.draw_string_advanced(519, 270, 53, "Super", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_string_advanced(519, 320, 53, "  Earth", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                 elif menu_collect==2:
+                    uart_data=bytes([0xaa, 0x55, 0x00, 0x02])
+                    uart.write(uart_data)
                     img.draw_rectangle(110, 150, 180, 100,color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(118, 150, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_string_advanced(119, 180, 53, "Detect", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
@@ -207,6 +225,8 @@ def display_test():
                     img.draw_string_advanced(519, 270, 53, "Super", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_string_advanced(519, 320, 53, "  Earth", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                 elif menu_collect == 3:
+                    uart_data=bytes([0xaa, 0x55, 0x00, 0x03])
+                    uart.write(uart_data)
                     img.draw_rectangle(110, 150, 180, 100, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(118, 150, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_string_advanced(119, 180, 53, "Detect", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
@@ -224,6 +244,8 @@ def display_test():
                     img.draw_string_advanced(519, 270, 53, "Super", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_string_advanced(519, 320, 53, "  Earth", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                 elif menu_collect == 4:
+                    uart_data=bytes([0xaa, 0x55, 0x00, 0x04])
+                    uart.write(uart_data)
                     img.draw_rectangle(110, 150, 180, 100, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(118, 150, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_string_advanced(119, 180, 53, "Detect", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
@@ -240,171 +262,199 @@ def display_test():
                     img.draw_string_advanced(519, 270, 53, "Super", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_string_advanced(519, 320, 53, "  Earth", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_rectangle(510, 280, 180, 100, color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
+                # 主界面
                 else:
-                    menu_collect = 1
+                    menu_collect = 0
+                    uart_data=bytes([0xaa, 0x55, 0x00, 0x00])
+                    uart.write(uart_data)
+                    img.draw_rectangle(110, 150, 180, 100, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(118, 150, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(119, 180, 53, "Detect", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(110, 280, 180, 100, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(119, 280, 45, "Pokemon", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(119, 310, 53, "Browse", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(510, 150, 180, 100, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 150, 50, "Sheikah", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(519, 185, 50, "  Stone", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    img.draw_rectangle(510, 280, 180, 100, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(519, 270, 53, "Super", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(519, 320, 53, "  Earth", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
 
             # 进入查找模式
-            if flag == 2 and key_chosen_flag:
-                key_chosen_flag=False
-                img.clear()
-                # 绘制输入框
-                img.draw_rectangle(160, 10, 500, 50, color=(255, 255, 255), thickness=2)
-                img.draw_string_advanced(40, 10, 45, "Input:", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(170, 10, 40, input_text, color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+            if(flag == 2):
+                uart_data=bytes([0xaa, 0x55, 0x01, 0x04])
+                uart.write(uart_data)
+                if key_chosen_flag:
+                    key_chosen_flag=False
+                    img.clear()
+                    # 绘制输入框
+                    img.draw_rectangle(160, 10, 500, 50, color=(255, 255, 255), thickness=2)
+                    img.draw_string_advanced(40, 10, 45, "Input:", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(170, 10, 40, input_text, color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
-                # QWERTY键盘布局
-                keys = [
-                    "QWERTYUIOP",
-                    "ASDFGHJKL",
-                    "ZXCVBNM"
-                ]
+                    # QWERTY键盘布局
+                    keys = [
+                        "QWERTYUIOP",
+                        "ASDFGHJKL",
+                        "ZXCVBNM"
+                    ]
 
-                key_width = 60
-                key_height = 60
-                margin = 10
+                    key_width = 60
+                    key_height = 60
+                    margin = 10
 
-                count=0
-                for row, key_row in enumerate(keys):
-                    for col, the_key in enumerate(key_row):
-                        if count!=19:
-                            count+=1
-                        else:
-                            count+=2
+                    count=0
+                    for row, key_row in enumerate(keys):
+                        for col, the_key in enumerate(key_row):
+                            if count!=19:
+                                count+=1
+                            else:
+                                count+=2
 
-                        x = col * (key_width + margin) + 10 + row*10
-                        y = row * (key_height + margin) + 270
-                        if key_chosen==count:
-                            img.draw_rectangle(x, y, key_width, key_height, color=(255, 255, 255),fill=True)
-                            img.draw_string_advanced(x + 15, y + 5, 30, the_key, color=(0, 0, 0), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                        else:
-                            img.draw_rectangle(x, y, key_width, key_height, color=(255, 255, 255))
-                            img.draw_string_advanced(x + 15, y + 5, 30, the_key, color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                del keys
-                gc.collect()
-
-                # 制作功能键 一二三行末尾分别是：(710,270)(650，340)(520，410)
-                if key_chosen==20:
-                    img.draw_rectangle(650, 340, 120, key_height, color=(255, 255, 255),fill=True)
-                    #img.draw_string_advanced(650, 340, "Random", color=(0, 0, 0), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                    img.draw_string_advanced(660, 340, 30,"Random", color=(0, 0, 0), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                else:
-                    img.draw_rectangle(650, 340, 120, key_height, color=(255, 255, 255))
-                    img.draw_string_advanced(660, 340, 30,"Random", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-
-                if key_chosen == 28:
-                    img.draw_rectangle(520, 410, 190, key_height, color=(255, 255, 255), fill=True)
-                    img.draw_string_advanced(530, 410, 30, "<- Backspace", color=(0, 0, 0), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                else:
-                    img.draw_rectangle(520, 410, 190, key_height, color=(255, 255, 255))
-                    img.draw_string_advanced(530, 410, 30, "<- Backspace", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-
-                # 首字母搜索 待数据集训练
-                # 读取拼音数据库并解析
-                with open("/data/pinyin.txt", "r",encoding='utf-8') as f:
-                    pinyin_list = eval(f.read())
-
-                pinyin_results=[]
-                for i,pinyin in enumerate(pinyin_list):
-                    if pinyin.startswith(input_text):
-                        pinyin_results.append(i)
-
-                result_num=len(pinyin_results)
-
-                # 补充模糊匹配
-                if result_num<10:
-                    for i,pinyin in enumerate(pinyin_list):
-                        if not pinyin.startswith(input_text) and input_text in pinyin:
-                            pinyin_results.append(i)
-
-                del pinyin_list
-                gc.collect()
-
-                #只取前 10 个
-                pinyin_res_count=len(pinyin_results[:10])
-
-                count=0
-                for i,res in enumerate(pinyin_results[:10]):
-                    pinyin_pokename=pokemon_linkname[res]
-                    kkk=res+1
-                    xxxxx=str(kkk)
-                    xxxxx='0'*(4-len(xxxxx))+xxxxx
-
-                    if kkk<=151:
-                        gen=1
-                    elif kkk<=251:
-                        gen=2
-                    elif kkk<=386:
-                        gen=3
-                    elif kkk<=493:
-                        gen=4
-                    elif kkk<=649:
-                        gen=5
-                    elif kkk<=721:
-                        gen=6
-                    elif kkk<=809:
-                        gen=7
-                    elif kkk<=905:
-                        gen=8
-                    else:
-                        gen=9
-
-                    #读取单个宝可梦信息
-                    file_path="/data/gen"+str(gen)+"/"+xxxxx+pinyin_pokename+"/inform.txt"
-
-                    with open(file_path, "r",encoding='utf-8') as f:
-                        data = f.readlines()
-                        pokename=eval(data[0])
-                        attributes=eval(data[1])
-
-                    del data
+                            x = col * (key_width + margin) + 10 + row*10
+                            y = row * (key_height + margin) + 270
+                            if key_chosen==count:
+                                img.draw_rectangle(x, y, key_width, key_height, color=(255, 255, 255),fill=True)
+                                img.draw_string_advanced(x + 15, y + 5, 30, the_key, color=(0, 0, 0), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                            else:
+                                img.draw_rectangle(x, y, key_width, key_height, color=(255, 255, 255))
+                                img.draw_string_advanced(x + 15, y + 5, 30, the_key, color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    del keys
                     gc.collect()
 
-                    count-=1
-                    if key_chosen==count:
-                        choose_pokemon=res
-                        num_color=(0,0,0)
-                        if i+1<=result_num:
-                            rec_color=(255,255,255)
+                    # 制作功能键 一二三行末尾分别是：(710,270)(650，340)(520，410)
+                    if key_chosen==20:
+                        img.draw_rectangle(650, 340, 120, key_height, color=(255, 255, 255),fill=True)
+                        #img.draw_string_advanced(650, 340, "Random", color=(0, 0, 0), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                        img.draw_string_advanced(660, 340, 30,"Random", color=(0, 0, 0), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    else:
+                        img.draw_rectangle(650, 340, 120, key_height, color=(255, 255, 255))
+                        img.draw_string_advanced(660, 340, 30,"Random", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    if key_chosen == 28:
+                        img.draw_rectangle(520, 410, 190, key_height, color=(255, 255, 255), fill=True)
+                        img.draw_string_advanced(530, 410, 30, "<- Backspace", color=(0, 0, 0), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    else:
+                        img.draw_rectangle(520, 410, 190, key_height, color=(255, 255, 255))
+                        img.draw_string_advanced(530, 410, 30, "<- Backspace", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                    # 首字母搜索 待数据集训练
+                    # 读取拼音数据库并解析
+                    with open("/data/pinyin.txt", "r",encoding='utf-8') as f:
+                        pinyin_list = eval(f.read())
+
+                    pinyin_results=[]
+                    for i,pinyin in enumerate(pinyin_list):
+                        if pinyin.startswith(input_text):
+                            pinyin_results.append(i)
+
+                    result_num=len(pinyin_results)
+
+                    # 补充模糊匹配
+                    if result_num<10:
+                        for i,pinyin in enumerate(pinyin_list):
+                            if not pinyin.startswith(input_text) and input_text in pinyin:
+                                pinyin_results.append(i)
+
+                    del pinyin_list
+                    gc.collect()
+
+                    #只取前 10 个
+                    pinyin_res_count=len(pinyin_results[:10])
+
+                    count=0
+                    for i,res in enumerate(pinyin_results[:10]):
+                        pinyin_pokename=pokemon_linkname[res]
+                        kkk=res+1
+                        xxxxx=str(kkk)
+                        xxxxx='0'*(4-len(xxxxx))+xxxxx
+
+                        if kkk<=151:
+                            gen=1
+                        elif kkk<=251:
+                            gen=2
+                        elif kkk<=386:
+                            gen=3
+                        elif kkk<=493:
+                            gen=4
+                        elif kkk<=649:
+                            gen=5
+                        elif kkk<=721:
+                            gen=6
+                        elif kkk<=809:
+                            gen=7
+                        elif kkk<=905:
+                            gen=8
                         else:
-                            rec_color=(200,200,200)
+                            gen=9
+
+                        #读取单个宝可梦信息
+                        file_path="/data/gen"+str(gen)+"/"+xxxxx+pinyin_pokename+"/inform.txt"
+
+                        with open(file_path, "r",encoding='utf-8') as f:
+                            data = f.readlines()
+                            pokename=eval(data[0])
+                            attributes=eval(data[1])
+
+                        del data
+                        gc.collect()
+
+                        count-=1
+                        if key_chosen==count:
+                            choose_pokemon=res
+                            num_color=(0,0,0)
+                            if i+1<=result_num:
+                                rec_color=(255,255,255)
+                            else:
+                                rec_color=(200,200,200)
+                            if i<=4:
+                                img.draw_rectangle(35, 65+i*37, 240, 35, color=rec_color,fill=True)
+                            else:
+                                img.draw_rectangle(425, 65+(i-5)*37, 240, 35, color=rec_color,fill=True)
+                        else:
+                            if i+1<=result_num:
+                                num_color=(255,255,255)
+                            else:
+                                num_color=(200,200,200)
+
                         if i<=4:
-                            img.draw_rectangle(35, 65+i*37, 240, 35, color=rec_color,fill=True)
+                            #img.draw_rectangle(20, 185, 45, 20, color=(255, 255, 255),fill=True)
+                            img.draw_string_advanced(35, 60+i*37, 32, pokename[0], color=num_color, font="/sdcard/res/font/ChillBitmap7x.ttf")
+                            img.draw_string_advanced(145, 60+i*37, 32, pokename[1], color=num_color, font="/sdcard/res/font/SourceHanSansSC-Normal-Min.ttf")
+                            # pokemon_img = image.Image("/data/gen"+str(gen)+"/"+xxxxx+pinyin_pokename+"/sprite.jpg")
+                            # img.draw_image(pokemon_img, 135,31+i*27,alpha=256)
+                            # del pokemon_img
+                            gc.collect()
                         else:
-                            img.draw_rectangle(425, 65+(i-5)*37, 240, 35, color=rec_color,fill=True)
-                    else:
-                        if i+1<=result_num:
-                            num_color=(255,255,255)
-                        else:
-                            num_color=(200,200,200)
+                            img.draw_string_advanced(425, 60+(i-5)*37, 32, pokename[0], color=num_color, font="/sdcard/res/font/ChillBitmap7x.ttf")
+                            img.draw_string_advanced(535, 60+(i-5)*37, 32, pokename[1], color=num_color, font="/sdcard/res/font/SourceHanSansSC-Normal-Min.ttf")
+                            # pokemon_img = image.Image("/data/gen"+str(gen)+"/"+xxxxx+pinyin_pokename+"/sprite.jpg")
+                            # img.draw_image(pokemon_img, 295,31+(i-5)*27, alpha=256)
+                            # del pokemon_img
+                            gc.collect()
 
-                    if i<=4:
-                        #img.draw_rectangle(20, 185, 45, 20, color=(255, 255, 255),fill=True)
-                        img.draw_string_advanced(35, 60+i*37, 32, pokename[0], color=num_color, font="/sdcard/res/font/ChillBitmap7x.ttf")
-                        img.draw_string_advanced(145, 60+i*37, 32, pokename[1], color=num_color, font="/sdcard/res/font/SourceHanSansSC-Normal-Min.ttf")
-                        # pokemon_img = image.Image("/data/gen"+str(gen)+"/"+xxxxx+pinyin_pokename+"/sprite.jpg")
-                        # img.draw_image(pokemon_img, 135,31+i*27,alpha=256)
-                        # del pokemon_img
-                        gc.collect()
-                    else:
-                        img.draw_string_advanced(425, 60+(i-5)*37, 32, pokename[0], color=num_color, font="/sdcard/res/font/ChillBitmap7x.ttf")
-                        img.draw_string_advanced(535, 60+(i-5)*37, 32, pokename[1], color=num_color, font="/sdcard/res/font/SourceHanSansSC-Normal-Min.ttf")
-                        # pokemon_img = image.Image("/data/gen"+str(gen)+"/"+xxxxx+pinyin_pokename+"/sprite.jpg")
-                        # img.draw_image(pokemon_img, 295,31+(i-5)*27, alpha=256)
-                        # del pokemon_img
-                        gc.collect()
-
-                    del pokename
-                    del attributes
-                del pinyin_results
-                gc.collect()
+                        del pokename
+                        del attributes
+                    del pinyin_results
+                    gc.collect()
+                
             # 拍摄模式
             if flag == 1:
+                uart_data=bytes([0xaa, 0x55, 0x01, 0x04])
+                uart.write(uart_data)
                 sensor.run()
                 img.clear()
                 # 单独提取拍摄图像
                 captured_img = sensor.snapshot(chn=CAM_CHN_ID_0)
                 img.draw_image(captured_img,0,0,0.4167,0.4167 )
+
+                data = uart.read(3)
+                if(data!=None and data[2]==0x01):
+                    random_flag = 1
 
             # 识图模式
             if flag == 0 and yolo_flag == 1 and read_init_flag == 0:
@@ -438,7 +488,34 @@ def display_test():
                 yolo.deinit()
                 gc.collect()
 
-            
+            # 左右切换赋值
+            if change_flag1==1:
+                change_flag1=0
+                form_num=0
+                k=(pokemon_linkname.index(linkname)-1)%386+1
+                x=str(k)
+                x='0'*(4-len(x))+x
+                linkname=pokemon_linkname[k-1]
+
+            if change_flag2==1:
+                change_flag2=0
+                form_num=0
+                k=(pokemon_linkname.index(linkname)+1)%386+1
+                x=str(k)
+                x='0'*(4-len(x))+x
+                linkname=pokemon_linkname[k-1]                                                              
+
+            # 随机选择赋值
+            if random_flag==1:
+                random_flag=0
+                read_init_flag = 1
+                form_num=0
+                current_time = utime.ticks_ms()
+                k = (current_time % 386) + 1
+
+                x=str(k)
+                x='0'*(4-len(x))+x
+                linkname=pokemon_linkname[k-1]
 
             if read_init_flag == 1:
                 img.clear()
@@ -508,7 +585,7 @@ def display_test():
                 img.draw_line(795, 470, 775, 460, color=(255,255,255), thickness=3)
                 img.draw_line(795, 470, 775, 480, color=(255,255,255), thickness=3)
                 img.draw_line(775, 460, 775, 480, color=(255,255,255), thickness=3)
-                img.draw_string_advanced(770-21*len(forname.strip()),450,25,b"%s %s"%(forname,'#'+'0'*(4-len(str(next_name)))+str(next_name)),color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(730-18*len(forname.strip()),450,25,b"%s %s"%(forname,'#'+'0'*(4-len(str(next_name)))+str(next_name)),color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
                 # 对应颜色
                 for col in colors:
@@ -600,6 +677,20 @@ def display_test():
                     img.draw_string_advanced(400+3,390+15,30,"???", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_string_advanced(400+3,420+15,30,"???", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
+                if time_flag == 1:
+                    time_flag = 0
+                    gif_img1.clear()
+                    gif_img2.clear()
+
+                    gc.collect()
+                    frame = image.Image("/data/gen"+str(gen)+"/"+x+linkname+"/gif-jpg/"+str(current_frame+1)+".bmp") # 调试
+                    gif_w=frame.width()
+                    gif_h=frame.height()
+                    img.draw_image(frame, 100-int(gif_w/2), 280-int(gif_h/2), 3, 3, alpha=256)
+                    current_frame = (current_frame + 1) % gif_count
+                    del frame
+                    gc.collect()
+
             if flag == 10:
                 img.clear()
                 img.draw_string_advanced(200, 15, 60, "SHEIKAH-STONE", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
@@ -609,8 +700,8 @@ def display_test():
 
                 # 触摸控制
                 p = tp.read()
-                if p != () and can_touch == 1:
-                    can_touch = 0
+                if p != () and time_flag == 1:
+                    time_flag = 0
                     # 区域1: Clock (180,100,120,80) → x:180-300, y:100-180
                     if p[0].x > 180 and p[0].x < 180+120 and p[0].y > 100 and p[0].y < 100+80:
                         if menu_collect != 1:
@@ -809,7 +900,8 @@ def display_test():
                 elif flag==1:
                     # 拍摄进入展示界面
                     flag = 0
-                    captured_img.save("/data/test/0001.jpg") # 调试
+                    current_frame = 0
+                    captured_img.save("/data/test/0001.jpg")
                     yolo_flag = 1
                     # form_num=0
 
@@ -943,6 +1035,8 @@ def display_test():
                         menu_collect=3
                     elif menu_collect==4:
                         menu_collect=3
+                    else:
+                        menu_collect = 1
                 elif flag==2:
                     key_chosen_flag=True
                     if pinyin_res_count==0:
@@ -995,6 +1089,8 @@ def display_test():
                         menu_collect=4
                     elif menu_collect==4:
                         menu_collect=4
+                    else:
+                        menu_collect = 1
                 elif flag==2:
                     key_chosen_flag=True
                     if pinyin_res_count==0:
@@ -1048,6 +1144,8 @@ def display_test():
                         menu_collect=1
                     elif menu_collect==4:
                         menu_collect=2
+                    else:
+                        menu_collect = 1
                 elif flag==2:
                     key_chosen_flag=True
                     if pinyin_res_count==0:
@@ -1083,7 +1181,9 @@ def display_test():
                         menu_collect = 2
                     elif menu_collect == 6:
                         menu_collect = 3
-
+                elif flag==0:
+                    change_flag1 = 1
+                    current_frame = 0
             # 右
             if current_key_state4 == 0 and last_key_state4 == 1:
                 if flag==-1:
@@ -1095,6 +1195,8 @@ def display_test():
                         menu_collect=3
                     elif menu_collect==4:
                         menu_collect=4
+                    else:
+                        menu_collect = 1
                 elif flag==2:
                     key_chosen_flag=True
                     if pinyin_res_count==0:
@@ -1130,6 +1232,9 @@ def display_test():
                         menu_collect = 5
                     elif menu_collect == 6:
                         menu_collect = 6
+                elif flag==0:
+                    change_flag2 = 1
+                    current_frame = 0
 
             # 返回
             if button.value() == 1:

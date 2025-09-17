@@ -946,6 +946,50 @@ void main()
 	}
 ```
 
+### 动图显示
+
+图鉴怎么能没有对照呢，由于硬件设备的局限，而爬虫爬的图又全是jpg，板子说压缩文件不能调用draw_image我真呵呵了。结果采用ffmpeg的强大转换功能实现转为bmp，采用循环播放图片来显示gif
+
+> Windows 系统（PowerShell）里有几百个子文件夹，子文件夹里有个名为gif-jpg的文件夹，把里面的文件转为bmp
+
+```
+Get-ChildItem -Directory | ForEach-Object {
+    $gifJpgPath = Join-Path -Path $_.FullName -ChildPath "gif-jpg"
+    if (Test-Path -Path $gifJpgPath) {
+        Push-Location -Path $gifJpgPath
+        $fileCount = (Get-ChildItem -File -Filter "*.jpg").Count
+        for ($i = 1; $i -le $fileCount; $i++) {
+            $inputFile = "$i.jpg"
+            $outputFile = "$i.bmp"
+            & ffmpeg -i $inputFile $outputFile
+        }
+        Pop-Location
+    }
+}
+```
+
+之后采用轮换图片方式，即可在详情界面查看动图
+
+ps：定时器不能设置太长的间隔，所以长按可能会有连续触摸的问题
+
+```python
+if time_flag == 1:
+    time_flag = 0
+    gif_img1.clear()
+    gif_img2.clear()
+
+    gc.collect()
+    frame = image.Image("/data/gen"+str(gen)+"/"+x+linkname+"/gif-jpg/"+str(current_frame+1)+".bmp") # 调试
+    gif_w=frame.width()
+    gif_h=frame.height()
+    img.draw_image(frame, 100-int(gif_w/2), 300-int(gif_h/2), 3, 3, alpha=256)
+    current_frame = (current_frame + 1) % gif_count
+    del frame
+    gc.collect()
+```
+
+
+
 ### 结合功能：摇一摇换人
 
 STC板收到振动事件时，向串口发送字节数据，使得K230的随机标记置为1
@@ -971,6 +1015,26 @@ void myVib_callback()
 
 
 ### 结合功能：识别成功时 LED 闪烁、蜂鸣器提示
+
+### 结合功能：主界面音乐
+
+根据音乐模块简谱编码规则进行编写
+
+> 图例，完整版我在网上找到
+
+![image-20250917190510073](README.assets/image-20250917190510073.png)
+
+```
+code char pokemon_get_DAZE[] = {
+	0x00, 0x08, 0x25, 0x04, 0x27, 0x04, 0x31, 0x04, 0x27, 0x04, 0x31, 0x04, 0x32, 0x04, 0x33, 0x20,
+	0x00, 0x08, 0x26, 0x08, 0x31, 0x08, 0x33, 0x08, 0x32, 0x08, 0x31, 0x08, 0x27, 0x08, 0x25, 0x08,
+	0x00, 0x08, 0x26, 0x04, 0x27, 0x04, 0x31, 0x04, 0x27, 0x04, 0x31, 0x04, 0x32, 0x04, 0x33, 0x20,
+	0x00, 0x08, 0x26, 0x08, 0x31, 0x04, 0x33, 0x08, 0x27, 0x04, 0x31, 0x04, 0x32, 0x04, 0x33, 0x20,
+
+	0x00, 0x10};
+```
+
+
 
 ## 更新日志
 
@@ -1014,3 +1078,6 @@ void myVib_callback()
 ### 9.17
 
 - 完成了通用UI详情界面，适配了不同元素显示
+- 完善串口通信和数码管显示
+- 完成摇一摇换人
+- 详情界面添加了动图和切换功能
