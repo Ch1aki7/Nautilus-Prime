@@ -860,13 +860,115 @@ ps.用外接摄像头测试了几组图片，发现由于分辨率的问题，�
 
 ![image-20250915164144195](README.assets/image-20250915164144195.png)
 
+### 双机串口通信
 
+成功打通双机通信
 
+![image-20250917124139011](README.assets/image-20250917124139011.png)
 
+K230测试代码 致敬传奇数据包头aa 55
 
+```
+from machine import UART
+from machine import FPIOA
 
+# 实例化FPIOA
+fpioa = FPIOA()
+# 设置PIN60为PWM通道0
+fpioa.set_function(11, FPIOA.UART2_TXD)
+fpioa.set_function(12, FPIOA.UART2_RXD)
+# UART2: baudrate 115200, 8bits, parity none, one stopbits
+uart = UART(UART.UART2, baudrate=115200, bits=UART.EIGHTBITS, parity=UART.PARITY_NONE, stop=UART.STOPBITS_ONE)
+
+# 发送字节数组
+data = bytes([0xaa, 0x55, 0x03, 0x04])
+uart.write(data)
+
+# 释放UART资源
+uart.deinit()
+```
+
+STC测试
+
+```
+#define RECEIVE_LEN 5
+char data_recieved[RECEIVE_LEN];
+char matched_data[] = {0xaa, 0x55, 0x03, 0x04};
+void myUart2_callback()
+{
+	Seg7Print(1, 1, 4, 5, 1, 4, 1, 9);
+}
+void myDisplay_callback()
+{
+	Seg7Print(0, 0, 0, 0, 0, 0, 0, 1);
+}
+void main()
+{
+	Uart2Init(115200, Uart2UsedforEXT);
+	displayerInit();
+	SetDisplayerArea(0, 7);
+
+	SetUart2Rxd(data_recieved, RECEIVE_LEN, matched_data, 2);
+
+	SetEventCallBack(enumEventUart2Rxd, myUart2_callback);
+	SetEventCallBack(enumEventSys1S, myDisplay_callback);
+
+	MySTC_Init();
+	while (1)
+	{
+		MySTC_OS();
+	}
+}
+```
+
+验证译码表
+
+```
+	if (count == 0)
+	{
+		// 显示索引10-17：A、B、C、D、E、F、G、H
+		Seg7Print(10, 11, 12, 13, 14, 15, 16, 17);
+	}
+	else if (count == 1)
+	{
+		// 显示索引18-25：I、J、K、L、M、N、O、P
+		Seg7Print(18, 19, 20, 21, 22, 23, 24, 25);
+	}
+	else if (count == 2)
+	{
+		// 显示索引26-33：Q、R、S、T、U、V、W、X
+		Seg7Print(26, 27, 28, 29, 30, 31, 32, 33);
+	}
+	else if (count == 3)
+	{
+		// 显示索引34-35（剩余2个）+ 补全6个空格（44）
+		Seg7Print(34, 35, 44, 44, 44, 44, 44, 44);
+	}
+```
 
 ### 结合功能：摇一摇换人
+
+STC板收到振动事件时，向串口发送字节数据，使得K230的随机标记置为1
+
+成功进行串口收发
+
+STC
+
+```
+void myVib_callback()
+{
+	char k = GetVibAct();
+	if (k == enumVibQuake)
+	{
+		uart_data[0]=0xaa;
+		uart_data[1]=0x55;
+		uart_data[2]=0x01;
+		Uart2Print(uart_data, 3);
+	}
+}
+```
+
+
 
 ### 结合功能：识别成功时 LED 闪烁、蜂鸣器提示
 
