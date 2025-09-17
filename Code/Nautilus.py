@@ -517,6 +517,18 @@ def display_test():
                 x='0'*(4-len(x))+x
                 linkname=pokemon_linkname[k-1]
 
+            # 查询界面选择赋值
+            if choose_flag==1:
+                choose_flag=0
+                read_init_flag = 1
+                key_chosen=20
+                input_text = ""
+                k=choose_pokemon+1
+
+                x=str(k)
+                x='0'*(4-len(x))+x
+                linkname=pokemon_linkname[k-1]
+
             if read_init_flag == 1:
                 img.clear()
                 img.draw_image(captured_img, 5, 5, 0.2, 0.2, alpha=256) # 缩放到左上角
@@ -686,7 +698,7 @@ def display_test():
                     frame = image.Image("/data/gen"+str(gen)+"/"+x+linkname+"/gif-jpg/"+str(current_frame+1)+".bmp") # 调试
                     gif_w=frame.width()
                     gif_h=frame.height()
-                    img.draw_image(frame, 100-int(gif_w/2), 280-int(gif_h/2), 3, 3, alpha=256)
+                    img.draw_image(frame, 10, 250, 3, 3, alpha=256)
                     current_frame = (current_frame + 1) % gif_count
                     del frame
                     gc.collect()
@@ -897,6 +909,7 @@ def display_test():
                     elif key_chosen<0:
                         flag=0
                         choose_flag=1
+
                 elif flag==1:
                     # 拍摄进入展示界面
                     flag = 0
@@ -906,122 +919,9 @@ def display_test():
                     # form_num=0
 
 
-
-
                 # 识图进入详情界面
                 elif flag==0:
                     read_init_flag=1
-
-
-
-                # 之后可配置切换信息
-                # elif choose_flag == 1:
-                #     choose_flag=0
-                #     key_chosen=20
-                #     input_text = ""
-                #     k=choose_pokemon+1
-
-                #     x=str(k)
-                #     x='0'*(4-len(x))+x
-                #     linkname=pokemon_linkname[k-1]
-                # # 注意模型未导入时k未定义，按键进入状态会报错
-                # if k<=151:
-                #     gen=1
-                # elif k<=251:
-                #     gen=2
-                # elif k<=386:
-                #     gen=3
-                # elif k<=493:
-                #     gen=4
-                # elif k<=649:
-                #     gen=5
-                # elif k<=721:
-                #     gen=6
-                # elif k<=809:
-                #     gen=7
-                # elif k<=905:
-                #     gen=8
-                # else:
-                #     gen=9
-
-                # file_path="/data/gen"+str(gen)+"/"+x+linkname+"/inform.txt"
-
-                # with open(file_path, "r",encoding='utf-8') as f:
-                #     data = f.readlines()
-                #     pokename=eval(data[0])
-                #     attributes=eval(data[1])
-                #     categories=eval(data[2])
-                #     special=eval(data[3])
-                #     height=data[4].strip()
-                #     weight=data[5].strip()
-                #     pokecolor=data[6].strip()
-                #     data1=eval(data[7])
-                #     gif_count=int(data[8])
-
-                # del data
-                # gc.collect()
-
-                # # 形态切换
-                # if form_flag==1:
-                #     form_flag=0
-                #     form_num+=1
-                #     form_path="/data/gen"+str(gen)+"/"+x+linkname+"/form/form_info/"+str(form_num)+".txt"
-                #     try:
-                #         with open(form_path, "r",encoding='utf-8') as f:
-                #             data = f.readlines()
-                #             formname=eval(data[0])[1]
-                #             attributes=eval(data[1])
-                #             categories=data[2].strip()
-                #             special=eval(data[3])
-                #             height=data[4].strip()
-                #             weight=data[5].strip()
-                #             pokecolor=data[6].strip()
-                #             data1=eval(data[7])
-                #         form_show_flag=1
-                #     except:
-                #         try:
-                #             form_num=0
-                #             form_path="/data/gen"+str(gen)+"/"+x+linkname+"/form/form_info/0.txt"
-                #             with open(form_path, "r",encoding='utf-8') as f:
-                #                 data = f.readlines()
-                #                 formname=eval(data[0])[1]
-                #                 attributes=eval(data[1])
-                #                 categories=data[2].strip()
-                #                 special=eval(data[3])
-                #                 height=data[4].strip()
-                #                 weight=data[5].strip()
-                #                 pokecolor=data[6].strip()
-                #                 data1=eval(data[7])
-                #             form_show_flag=1
-                #         except:
-                #             form_num=0
-
-                # # 神秘标志位
-                # if not read_init_flag0==1:
-                #     if form_num==0:
-                #         evo_txt="/sd/gen"+str(gen)+"/"+x+linkname+"/evolution.txt"
-                #         evo_img="/sd/gen"+str(gen)+"/"+x+linkname+"/evolution/"
-                #         with open(evo_txt,'r') as f:
-                #             evolutions=eval(f.read().strip())
-
-                #     elif int(x)==555 and (form_num==2 or form_num==3):
-                #         evo_txt="/sd/gen"+str(gen)+"/"+x+linkname+"/form/form_evo/evolution_form.txt"
-                #         evo_img="/sd/gen"+str(gen)+"/"+x+linkname+"/form/form_evo/"
-                #         with open(evo_txt,'r') as f:
-                #             evolutions=eval(f.read().strip())
-
-                #     elif form_num==1:
-                #         try:
-                #             evo_txt="/sd/gen"+str(gen)+"/"+x+linkname+"/form/form_evo/evolution_form.txt"
-                #             evo_img="/sd/gen"+str(gen)+"/"+x+linkname+"/form/form_evo/"
-                #             with open(evo_txt,'r') as f:
-                #                 evolutions=eval(f.read().strip())
-                #         except:
-                #             evo_txt="/sd/gen"+str(gen)+"/"+x+linkname+"/evolution.txt"
-                #             evo_img="/sd/gen"+str(gen)+"/"+x+linkname+"/evolution/"
-                #             with open(evo_txt,'r') as f:
-                #                 evolutions=eval(f.read().strip())
-
 
 
             # 上
