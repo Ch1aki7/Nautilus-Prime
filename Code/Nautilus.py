@@ -485,11 +485,11 @@ def display_test():
 
                 # 页脚
                 now_name=int(pokename[0].split('#')[-1])
-                img.draw_string_advanced(350,440,40,"0"*(4-len(str(now_name)))+"%s/1025"%(str(now_name)),color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(350,440,40,"0"*(4-len(str(now_name)))+"%s/386"%(str(now_name)),color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                 if now_name==1:
-                    pre_name=1025
+                    pre_name=386
                     next_name=now_name+1
-                elif now_name==1025:
+                elif now_name==386:
                     pre_name=now_name-1
                     next_name=1
                 else:
@@ -501,20 +501,21 @@ def display_test():
                 img.draw_line(5, 470, 25, 480, color=(255,255,255), thickness=3)
                 img.draw_line(5, 470, 25, 460, color=(255,255,255), thickness=3)
                 img.draw_line(25, 460, 25, 480, color=(255,255,255), thickness=3)
-                img.draw_string_advanced(30,450,30,b"%s %s"%('#'+'0'*(4-len(str(pre_name)))+str(pre_name),backname),color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(30,450,25,b"%s %s"%('#'+'0'*(4-len(str(pre_name)))+str(pre_name),backname),color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
                 forname=pokemon_linkname[next_name-1]
                 img.draw_line(795, 460, 795, 480, color=(255,255,255), thickness=3)
                 img.draw_line(795, 470, 775, 460, color=(255,255,255), thickness=3)
                 img.draw_line(795, 470, 775, 480, color=(255,255,255), thickness=3)
                 img.draw_line(775, 460, 775, 480, color=(255,255,255), thickness=3)
-                img.draw_string_advanced(770-28*len(forname.strip()),450,30,b"%s %s"%(forname,'#'+'0'*(4-len(str(next_name)))+str(next_name)),color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(770-21*len(forname.strip()),450,25,b"%s %s"%(forname,'#'+'0'*(4-len(str(next_name)))+str(next_name)),color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
                 # 对应颜色
                 for col in colors:
                     if col[0]==pokecolor:
                         img.draw_string_advanced(450,40,40,b"%s"%(pokename[1]),color=(col[1],col[2], col[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(790-45*len(pokename[2].strip()),40,40,b"%s"%(pokename[2]),color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                # 空间问题 日语名暂且注释
+                # img.draw_string_advanced(790-45*len(pokename[2].strip()),40,40,b"%s"%(pokename[2]),color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
                 # 元素属性
                 attr_count=0
@@ -527,18 +528,77 @@ def display_test():
                                 if len(attr)==1:
                                     img.draw_string_advanced(485,90,50,b"%s"%(attributes[0]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
                                 elif len(attr)==2:
-                                    img.draw_string_advanced(227,64,20,b"%s"%(attributes[0]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                                    img.draw_string_advanced(465,90,50,b"%s"%(attributes[0]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
                                 else:
-                                    img.draw_string_advanced(219,64,20,b"%s"%(attributes[0]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                                    img.draw_string_advanced(455,90,40,b"%s"%(attributes[0]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
                             elif attr_count==2:
                                 img.draw_rectangle(585,90,120,60,(value[1],value[2],value[3]), thickness=3)
                                 if len(attr)==1:
-                                    img.draw_string_advanced(595,90,50,b"%s"%(attributes[1]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                                    img.draw_string_advanced(620,90,50,b"%s"%(attributes[1]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
                                 elif len(attr)==2:
-                                    img.draw_string_advanced(595,90,40,b"%s"%(attributes[1]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                                    img.draw_string_advanced(595,90,50,b"%s"%(attributes[1]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
                                 else:
-                                    img.draw_string_advanced(269,64,20,b"%s"%(attributes[1]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                                    img.draw_string_advanced(590,90,40,b"%s"%(attributes[1]) ,color=(value[1],value[2],value[3]), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
+                if isinstance(categories,list):
+                    img.draw_string_advanced(450,145,45,b"%s"%(categories[0]), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                elif isinstance(categories,str):
+                    img.draw_string_advanced(450,145,45,b"%s"%(categories), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                img.draw_string_advanced(450,190,40,b"特性", color=(200, 200, 200), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                img.draw_string_advanced(300,230,30,b"种族值:", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(300,270,25,b"ＨＰ", color=(138,198,84), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(300,300,25,b"攻击", color=(248,203,60), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(300,330,25,b"防御", color=(217,136,55), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(300,360,25,b"特攻", color=(89,195,208), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(300,390,25,b"特防", color=(88,144,205), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(300,420,25,b"速度", color=(164,86,208), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                if data1[0]!='?':
+                    strength1=int(str(data1[0]).split("：")[-1])
+                    strength2=int(str(data1[1]).split("：")[-1])
+                    strength3=int(str(data1[2]).split("：")[-1])
+                    strength4=int(str(data1[3]).split("：")[-1])
+                    strength5=int(str(data1[4]).split("：")[-1])
+                    strength6=int(str(data1[5]).split("：")[-1])
+                    data1_sum=strength1+strength2+strength3+strength4+strength5+strength6
+                else:
+                    strength1='?'
+                    strength2='?'
+                    strength3='?'
+                    strength4='?'
+                    strength5='?'
+                    strength6='?'
+                    data1_sum='???'
+
+                img.draw_string_advanced(420,230,30,b"%s"%(str(data1_sum)), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(560,190,30,b"%s"%(height), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(640,190,30,b"%s"%(weight), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                img.draw_rectangle(295,270,480,180,(255,255,255), thickness=2)
+                img.draw_string_advanced(360,270,25,"%s"%(data1[0].split("：")[-1]), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(360,300,25,"%s"%(data1[1].split("：")[-1]), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(360,330,25,"%s"%(data1[2].split("：")[-1]), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(360,360,25,"%s"%(data1[3].split("：")[-1]), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(360,390,25,"%s"%(data1[4].split("：")[-1]), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(360,420,25,"%s"%(data1[5].split("：")[-1]), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+                img.draw_line(400, 270, 400, 450, color=(255,255,255), thickness=2)
+                if data1[0]!='?':
+                    img.draw_line(400, 270+15, 400+int(strength1*2.0), 270+15, color=(138,198,84), thickness=8)
+                    img.draw_line(400, 300+15, 400+int(strength2*2.0), 300+15, color=(248,203,60), thickness=8)
+                    img.draw_line(400, 330+15, 400+int(strength3*2.0), 330+15, color=(217,136,55), thickness=8)
+                    img.draw_line(400, 360+15, 400+int(strength4*2.0), 360+15, color=(89,195,208), thickness=8)
+                    img.draw_line(400, 390+15, 400+int(strength5*2.0), 390+15, color=(88,144,205), thickness=8)
+                    img.draw_line(400, 420+15, 400+int(strength6*2.0), 420+15, color=(164,86,208), thickness=8)
+                else:
+                    img.draw_string_advanced(400+3,270+15,30,"???", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(400+3,300+15,30,"???", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(400+3,330+15,30,"???", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(400+3,360+15,30,"???", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(400+3,390+15,30,"???", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(400+3,420+15,30,"???", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
             if flag == 10:
                 img.clear()
@@ -749,7 +809,7 @@ def display_test():
                 elif flag==1:
                     # 拍摄进入展示界面
                     flag = 0
-                    captured_img.save("/data/test/debug.jpg") # 调试
+                    captured_img.save("/data/test/0001.jpg") # 调试
                     yolo_flag = 1
                     # form_num=0
 
