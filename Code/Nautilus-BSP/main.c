@@ -105,11 +105,21 @@ void myUart2_callback()
 {
 	char flag = data_recieved[2];
 	char menu_select = data_recieved[3];
+	char function = data_recieved[3];
 
 	if (flag == 0x01 || flag == 0x02)
 		LEDmode = 2;
-	else
+	else if (flag == 0x00)
 		LEDmode = 1;
+	else if (flag == 0x03)
+	{
+		LEDmode = 3;
+	}
+
+	if (flag == 0x03)
+	{
+		interp = 0;
+	}
 }
 void myDisplay_callback()
 {
@@ -130,6 +140,8 @@ void myDisplay_callback()
 	}
 	else if (flag == 0x01)
 		Seg7Print(23, 10, 30, 29, 18, 21, 30, 28);
+	else if (flag == 0x03)
+		Seg7Print(16, 14, 29, 42, 13, 10, 35, 14);
 }
 void myKey_callback()
 {
@@ -186,6 +198,14 @@ void myLED_callback()
 	else if (LEDmode == 2)
 	{
 		LedPrint(led_val);
+	}
+	else if (LEDmode == 3 && LEDchange == 1)
+	{
+		LedPrint(0xFF);
+	}
+	else if (LEDmode == 3 && LEDchange == -1)
+	{
+		LedPrint(0x00);
 	}
 	LEDchange *= -1;
 

@@ -472,7 +472,6 @@ def display_test():
                 x='0'*(4-len(x))+x
                 linkname=pokemon_linkname[k-1]
 
-
                 yolo.deinit()
                 gc.collect()
 
@@ -924,6 +923,10 @@ def display_test():
                 # 识图进入详情界面
                 elif flag==0:
                     read_init_flag=1
+                    # 识别成功，蜂鸣器发声
+                    uart_data=bytes([0xaa, 0x55, 0x03, 0x01])
+                    uart.write(uart_data)
+
                 # 希卡之石模式
                 elif flag==10:
                     if menu_collect==1:
