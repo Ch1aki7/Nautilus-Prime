@@ -75,9 +75,23 @@ code char decode_table[] = {
 	0x63  // = (45): 01100011 (gºÍd¶ÎÁÁ)
 };
 #endif
+code char pokemon_get_DAZE[] = {
+	0x00, 0x08, 0x25, 0x04, 0x27, 0x04, 0x31, 0x04, 0x27, 0x04, 0x31, 0x04, 0x32, 0x04, 0x33, 0x20,
+	0x00, 0x08, 0x26, 0x08, 0x31, 0x08, 0x33, 0x08, 0x32, 0x08, 0x31, 0x08, 0x27, 0x08, 0x25, 0x08,
+	0x00, 0x08, 0x26, 0x04, 0x27, 0x04, 0x31, 0x04, 0x27, 0x04, 0x31, 0x04, 0x32, 0x04, 0x33, 0x20,
+	0x00, 0x08, 0x26, 0x08, 0x31, 0x04, 0x33, 0x08, 0x35, 0x04, 0x00, 0x10, 0x00, 0x08, 0x26, 0x08,
 
+	0x31, 0x04, 0x26, 0x04, 0x31, 0x04, 0x26, 0x04, 0x31, 0x04, 0x26, 0x04, 0x31, 0x04, 0x26, 0x04,
+	0x26, 0x08, 0x31, 0x08, 0x31, 0x04, 0x32, 0x08, 0x27, 0x14, 0x00, 0x08, 0x26, 0x04, 0x26, 0x04,
+	0x31, 0x04, 0x26, 0x04, 0x31, 0x04, 0x26, 0x04, 0x31, 0x04, 0x26, 0x04, 0x26, 0x04, 0x26, 0x04,
+	0x33, 0x08, 0x33, 0x08, 0x32, 0x04, 0x31, 0x08, 0x27, 0x24,
+
+	0x00, 0x10};
 #define RECEIVE_LEN 5
 int count = 0;
+// Beep¿ØÖÆ
+int interp = 1;
+int a = 0;
 // LED¿ØÖÆ
 int LEDmode = 1;
 int LEDchange = 1;
@@ -119,10 +133,44 @@ void myDisplay_callback()
 }
 void myKey_callback()
 {
-	char k = GetKeyAct(enumKey1);
-	if (k == enumKeyPress)
+	if (GetKeyAct(enumKey1) == enumKeyPress)
+	{
+		SetPlayerMode(enumModePlay);
+	}
+	if (GetKeyAct(enumKey2) == enumKeyPress)
+	{
+		SetPlayerMode(enumModePause);
+	}
+}
+void beep_check()
+{
+	if (GetBeepStatus() == enumBeepFree && interp == 0)
+	{
+		a += 1;
+	}
 
-		count++;
+	if (a > 4)
+	{
+		a = 0;
+	}
+
+	if (interp == 0 && a == 1)
+	{
+		SetBeep(523, 25);
+	}
+	else if (interp == 0 && a == 2)
+	{
+		SetBeep(587, 25);
+	}
+	else if (interp == 0 && a == 3)
+	{
+		SetBeep(659, 25);
+	}
+	else if (interp == 0 && a == 4)
+	{
+		SetBeep(784, 80);
+		interp = 1;
+	}
 }
 void myLED_callback()
 {
@@ -155,32 +203,65 @@ void myLED_callback()
 		led_flow_reverse *= -1;
 	}
 }
+void my10mS_callback()
+{
+	// BeepÂÖÑ¯
+	beep_check();
+}
 void myVib_callback()
 {
 	char k = GetVibAct();
 	if (k == enumVibQuake)
 	{
-		uart_data[0]=0xaa;
-		uart_data[1]=0x55;
-		uart_data[2]=0x01;
+		uart_data[0] = 0xaa;
+		uart_data[1] = 0x55;
+		uart_data[2] = 0x01;
 		Uart2Print(uart_data, 3);
 	}
 }
+void myHall_callback()
+{
+	char k = GetHallAct();
+	if (k == enumHallGetClose)
+	{
+		uart_data[0] = 0xaa;
+		uart_data[1] = 0x55;
+		uart_data[2] = 0x02;
+		Uart2Print(uart_data, 3);
+		// Beep
+		interp = 0;
+	}
+	else if (k == enumHallGetAway)
+	{
+		uart_data[0] = 0xaa;
+		uart_data[1] = 0x55;
+		uart_data[2] = 0x03;
+		Uart2Print(uart_data, 3);
+	}
+}
+
 void main()
 {
 	Uart2Init(115200, Uart2UsedforEXT);
 	displayerInit();
 	keyInit();
 	VibInit();
+	MusicPlayerInit();
+	BeepInit();
+	HallInit();
 	SetDisplayerArea(0, 7);
 
 	SetUart2Rxd(data_recieved, RECEIVE_LEN, matched_data, 2);
 
+	SetMusic(110, 0xFA, pokemon_get_DAZE, sizeof(pokemon_get_DAZE), enumMscDrvLed);
+
+	SetEventCallBack(enumEventHall, myHall_callback);
 	SetEventCallBack(enumEventVib, myVib_callback);
 	SetEventCallBack(enumEventKey, myKey_callback);
 	SetEventCallBack(enumEventUart2Rxd, myUart2_callback);
 	SetEventCallBack(enumEventSys1S, myDisplay_callback);
 	SetEventCallBack(enumEventSys100mS, myLED_callback);
+	SetEventCallBack(enumEventSys10mS, my10mS_callback);
 
 	MySTC_Init();
 	while (1)

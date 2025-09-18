@@ -89,11 +89,11 @@ def display_test():
         last_key_state4=1
         last_key_state5=1
 
-        menu_collect = 0 # 当前选中哪个模式
+        menu_collect = 4 # 当前选中哪个模式
         chosen_color = 0
         input_text = ""
         key_chosen_flag = True
-        flag = -1 # 当前在哪个模式里 -1为初始
+        flag = 10 # 当前在哪个模式里 -1为初始
 
         sheikah_stone = 0 # 希卡之石模式 实际为flag = 10
         super_earth = 0 # 战备呼叫模式 实际为flag = 20
@@ -114,6 +114,8 @@ def display_test():
         # 左右切换标志位
         change_flag1 = 0
         change_flag2 = 0
+        
+        mag_time = 0
 
         # 触摸控制
         tp = TOUCH(0)
@@ -761,7 +763,7 @@ def display_test():
                     img.draw_rectangle(510, 300, 120, 80, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(519, 300, 45, "Bomb", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
-                if menu_collect == 2:
+                elif menu_collect == 2:
                     img.draw_rectangle(180, 100, 120, 80, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(190, 100, 45, "Clock", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
@@ -781,7 +783,7 @@ def display_test():
                     img.draw_rectangle(510, 300, 120, 80, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(519, 300, 45, "Bomb", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
-                if menu_collect == 3:
+                elif menu_collect == 3:
                     img.draw_rectangle(180, 100, 120, 80, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(190, 100, 45, "Clock", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
@@ -801,7 +803,7 @@ def display_test():
                     img.draw_rectangle(510, 300, 120, 80, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(519, 300, 45, "Bomb", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
-                if menu_collect == 4:
+                elif menu_collect == 4:
                     img.draw_rectangle(180, 100, 120, 80, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(190, 100, 45, "Clock", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
@@ -821,7 +823,7 @@ def display_test():
                     img.draw_rectangle(510, 300, 120, 80, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(519, 300, 45, "Bomb", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
-                if menu_collect == 5:
+                elif menu_collect == 5:
                     img.draw_rectangle(180, 100, 120, 80, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(190, 100, 45, "Clock", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
@@ -841,7 +843,7 @@ def display_test():
                     img.draw_rectangle(510, 300, 120, 80, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(519, 300, 45, "Bomb", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
-                if menu_collect == 6:
+                elif menu_collect == 6:
                     img.draw_rectangle(180, 100, 120, 80, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(190, 100, 45, "Clock", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
@@ -860,8 +862,22 @@ def display_test():
                     img.draw_rectangle(510, 300, 120, 80, color=(chosen_color, chosen_color, chosen_color), fill=True)
                     img.draw_string_advanced(519, 300, 45, "Bomb", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_rectangle(510, 300, 120, 80, color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
-
-
+                else:
+                    menu_collect = 1
+            if flag == 14:
+                if mag_time == 0:
+                    img.clear()
+                    img.draw_string_advanced(100, 15, 60, "--正在探测磁力宝可梦--", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                data = uart.read(3)
+                if(data!=None and data[2]==0x02):
+                    mag_time = 1
+                    img.clear()
+                    img.draw_string_advanced(180, 15, 60, "!检测到磁力宝可梦!", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(200, 100, 60, "!请保持安全距离!", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                elif(data!=None and data[2]==0x03):
+                    img.clear()
+                    img.draw_string_advanced(140, 100, 60, "~磁力宝可梦已经离开~", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(70, 280, 50, "~请按返回键以使用其他功能~", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
             # 确认键
             if current_key_state5 == 0 and last_key_state5 == 1:
@@ -908,7 +924,20 @@ def display_test():
                 # 识图进入详情界面
                 elif flag==0:
                     read_init_flag=1
-
+                # 希卡之石模式
+                elif flag==10:
+                    if menu_collect==1:
+                        flag=11
+                    elif menu_collect==2:
+                        flag=12
+                    elif menu_collect==3:
+                        flag=13
+                    elif menu_collect==4:
+                        flag=14
+                    elif menu_collect==5:
+                        flag=15
+                    elif menu_collect==6:
+                        flag=16
 
             # 上
             if current_key_state1 == 0 and last_key_state1 == 1:
@@ -1124,11 +1153,12 @@ def display_test():
 
             # 返回
             if button.value() == 1:
-                if flag == 0 or flag == 1 or flag == 2 or flag == 10:
+                if flag <= 10:
                     flag = -1
                     read_init_flag = 0
                 elif flag == 11 or flag == 12 or flag == 13 or flag == 14 or flag == 15 or flag == 16:
                     flag = 10
+                    mag_time = 0
 
 
             last_key_state1 = current_key_state1
