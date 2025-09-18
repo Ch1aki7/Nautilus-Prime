@@ -893,7 +893,7 @@ def display_test():
                             else:
                                 input_text += "QWERTYUIOPASDFGHJKLZXCVBNM"[key_chosen-2]
                     elif key_chosen<0:
-                        flag=0
+                        flag=1
                         choose_flag=1
 
                 elif flag==1:

@@ -1094,3 +1094,4 @@ code char pokemon_get_DAZE[] = {
 本来想着大部分已经做完了，接下来就是加加小功能
 
 - 改了动图神秘bug，current_frame在随机和查询未初始化导致报错
+- 修复了查询宝可梦报错的神秘bug
