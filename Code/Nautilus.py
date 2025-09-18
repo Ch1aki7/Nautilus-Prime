@@ -46,16 +46,6 @@ uart = UART(UART.UART2, baudrate=115200, bits=UART.EIGHTBITS, parity=UART.PARITY
 uart_data = bytes([])
 uart_received = None
 
-# def display_init():
-#     Display.init(Display.ST7701, width = DISPLAY_WIDTH, height = DISPLAY_HEIGHT, to_ide = True)
-#     MediaManager.init()
-
-# def display_deinit():
-#     os.exitpoint(os.EXITPOINT_ENABLE_SLEEP)  # 启用系统休眠出口点
-#     time.sleep_ms(50)                        # 延迟 50ms 等待资源释放
-#     Display.deinit()                         # 关闭显示驱动
-#     MediaManager.deinit()                    # 释放媒体资源（缓冲区等）
-
 def timer_callback(t):
     global time_flag
     time_flag = 1
@@ -73,8 +63,6 @@ def display_test():
 
 
     img = image.Image(DISPLAY_WIDTH, DISPLAY_HEIGHT, image.RGB565)
-    gif_img1 = image.Image(DISPLAY_WIDTH, DISPLAY_HEIGHT, image.RGB565)
-    gif_img2 = image.Image(DISPLAY_WIDTH, DISPLAY_HEIGHT, image.RGB565)
     pokedex_img = image.Image("/data/pokedex.bmp")
 
     # sensor加载
@@ -85,8 +73,6 @@ def display_test():
 
     Display.init(Display.ST7701, width = DISPLAY_WIDTH, height = DISPLAY_HEIGHT, to_ide = True)
     MediaManager.init()
-
-
 
     try:
         # 按键实例化
@@ -123,6 +109,7 @@ def display_test():
         linkname = "" # 存储res[0]
         form_flag = 0 #区分宝可梦形态
         form_num = 0
+        current_frame = 0 # 注意！！！每次刷新宝可梦都要初始化！！！b bug改了一小时
 
         # 左右切换标志位
         change_flag1 = 0
@@ -134,9 +121,8 @@ def display_test():
         tim = Timer(-1)
         tim.init(period=5, mode=Timer.PERIODIC, callback=timer_callback)
 
-
-        # 使用IDE的帧缓冲区作为显示输出
-        Display.init(Display.VIRT, width=1920, height=1080, to_ide=True)
+        # # 使用IDE的帧缓冲区作为显示输出
+        # Display.init(Display.VIRT, width=1920, height=1080, to_ide=True)
 
         while True:
             # 实时获取按键
@@ -508,6 +494,7 @@ def display_test():
             # 随机选择赋值
             if random_flag==1:
                 random_flag=0
+                current_frame = 0
                 read_init_flag = 1
                 form_num=0
                 current_time = utime.ticks_ms()
@@ -520,9 +507,11 @@ def display_test():
             # 查询界面选择赋值
             if choose_flag==1:
                 choose_flag=0
+                current_frame = 0
                 read_init_flag = 1
                 key_chosen=20
                 input_text = ""
+                
                 k=choose_pokemon+1
 
                 x=str(k)
@@ -689,12 +678,9 @@ def display_test():
                     img.draw_string_advanced(400+3,390+15,30,"???", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_string_advanced(400+3,420+15,30,"???", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
+                # 易出bug
                 if time_flag == 1:
                     time_flag = 0
-                    gif_img1.clear()
-                    gif_img2.clear()
-
-                    gc.collect()
                     frame = image.Image("/data/gen"+str(gen)+"/"+x+linkname+"/gif-jpg/"+str(current_frame+1)+".bmp") # 调试
                     gif_w=frame.width()
                     gif_h=frame.height()
@@ -1157,10 +1143,20 @@ def display_test():
             os.exitpoint()
     except KeyboardInterrupt as e:
         print("user stop: ", e)
+        # deinit display
+        Display.deinit()
+        os.exitpoint(os.EXITPOINT_ENABLE_SLEEP)
+        time.sleep_ms(100)
+        # release media buffer
+        MediaManager.deinit()
     except BaseException as e:
         print(f"Exception {e}")
-
-    sensor.stop()
+        # deinit display
+        Display.deinit()
+        os.exitpoint(os.EXITPOINT_ENABLE_SLEEP)
+        time.sleep_ms(100)
+        # release media buffer
+        MediaManager.deinit()
     # deinit display
     Display.deinit()
     os.exitpoint(os.EXITPOINT_ENABLE_SLEEP)
