@@ -142,6 +142,21 @@ void myDisplay_callback()
 		Seg7Print(23, 10, 30, 29, 18, 21, 30, 28);
 	else if (flag == 0x03)
 		Seg7Print(16, 14, 29, 42, 13, 10, 35, 14);
+	else if (flag == 0x10)
+	{
+		if (menu_select == 0x01)
+			Seg7Print(42, 12, 21, 24, 12, 20, 42, 42);
+		else if (menu_select == 0x02)
+			Seg7Print(42, 42, 12, 10, 22, 42, 42, 42);
+		else if (menu_select == 0x03)
+			Seg7Print(42, 42, 29, 14, 22, 25, 42, 42);
+		else if (menu_select == 0x04)
+			Seg7Print(42, 42, 22, 10, 16, 42, 42, 42);
+		else if (menu_select == 0x05)
+			Seg7Print(42, 22, 30, 28, 18, 12, 42, 42);
+		else if (menu_select == 0x06)
+			Seg7Print(42, 42, 11, 24, 22, 11, 42, 42);
+	}
 }
 void myKey_callback()
 {

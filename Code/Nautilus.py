@@ -743,6 +743,8 @@ def display_test():
 
                 # 选中视觉效果
                 if menu_collect == 1:
+                    uart_data=bytes([0xaa, 0x55, 0x10, 0x01])
+                    uart.write(uart_data)
                     img.draw_rectangle(180, 100, 120, 80, color=(chosen_color, chosen_color, chosen_color), fill=True)
                     img.draw_string_advanced(190, 100, 45, "Clock", color=(255-chosen_color, 255-chosen_color, 255-chosen_color), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_rectangle(180, 100, 120, 80,color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
@@ -763,6 +765,8 @@ def display_test():
                     img.draw_string_advanced(519, 300, 45, "Bomb", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
                 elif menu_collect == 2:
+                    uart_data=bytes([0xaa, 0x55, 0x10, 0x02])
+                    uart.write(uart_data)
                     img.draw_rectangle(180, 100, 120, 80, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(190, 100, 45, "Clock", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
@@ -783,6 +787,8 @@ def display_test():
                     img.draw_string_advanced(519, 300, 45, "Bomb", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
                 elif menu_collect == 3:
+                    uart_data=bytes([0xaa, 0x55, 0x10, 0x03])
+                    uart.write(uart_data)
                     img.draw_rectangle(180, 100, 120, 80, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(190, 100, 45, "Clock", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
@@ -803,6 +809,8 @@ def display_test():
                     img.draw_string_advanced(519, 300, 45, "Bomb", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
                 elif menu_collect == 4:
+                    uart_data=bytes([0xaa, 0x55, 0x10, 0x04])
+                    uart.write(uart_data)      
                     img.draw_rectangle(180, 100, 120, 80, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(190, 100, 45, "Clock", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
@@ -823,6 +831,8 @@ def display_test():
                     img.draw_string_advanced(519, 300, 45, "Bomb", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
                 elif menu_collect == 5:
+                    uart_data=bytes([0xaa, 0x55, 0x10, 0x05])
+                    uart.write(uart_data)
                     img.draw_rectangle(180, 100, 120, 80, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(190, 100, 45, "Clock", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
@@ -843,6 +853,8 @@ def display_test():
                     img.draw_string_advanced(519, 300, 45, "Bomb", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
                 elif menu_collect == 6:
+                    uart_data=bytes([0xaa, 0x55, 0x10, 0x06])
+                    uart.write(uart_data)
                     img.draw_rectangle(180, 100, 120, 80, color=(255, 255, 255), thickness=2)
                     img.draw_string_advanced(190, 100, 45, "Clock", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
 
