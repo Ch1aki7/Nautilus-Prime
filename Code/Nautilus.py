@@ -115,6 +115,7 @@ def display_test():
         change_flag1 = 0
         change_flag2 = 0
         
+        RTC_time = 0
         mag_time = 0
 
         # 触摸控制
@@ -875,6 +876,21 @@ def display_test():
                     img.draw_rectangle(510, 300, 120, 80, color=(255-chosen_color, 255-chosen_color, 255-chosen_color), thickness=2)
                 else:
                     menu_collect = 1
+
+            # RTC模式
+            if flag == 11:
+                if RTC_time == 0:
+                    img.clear()
+                RTC_time = 1
+                uart_data=bytes([0xaa, 0x55, 0x11, 0x01])
+                uart.write(uart_data)
+                data = uart.read(7)
+                if(data!=None and data[-1]==0xaa):
+                    img.clear()
+                    img.draw_string_advanced(20, 120, 200, str(data[0]) + str(data[1])+ ':' + str(data[2]) + str(data[3])+ ':' + str(data[4]) + str(data[5]), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(160, 15, 60, "--现在的时间是--", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+
+            # 磁力探测模式
             if flag == 14:
                 if mag_time == 0:
                     img.clear()
@@ -889,7 +905,7 @@ def display_test():
                     img.clear()
                     img.draw_string_advanced(140, 100, 60, "~磁力宝可梦已经离开~", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_string_advanced(70, 280, 50, "~请按返回键以使用其他功能~", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-
+            
             # 确认键
             if current_key_state5 == 0 and last_key_state5 == 1:
                 #初始界面
@@ -1174,6 +1190,7 @@ def display_test():
                 elif flag == 11 or flag == 12 or flag == 13 or flag == 14 or flag == 15 or flag == 16:
                     flag = 10
                     mag_time = 0
+                    RTC_time = 0
 
 
             last_key_state1 = current_key_state1
