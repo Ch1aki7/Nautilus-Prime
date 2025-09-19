@@ -89,11 +89,11 @@ def display_test():
         last_key_state4=1
         last_key_state5=1
 
-        menu_collect = 4 # 当前选中哪个模式
+        menu_collect = 1 # 当前选中哪个模式
         chosen_color = 0
         input_text = ""
         key_chosen_flag = True
-        flag = 10 # 当前在哪个模式里 -1为初始
+        flag = -1 # 当前在哪个模式里 -1为初始
 
         sheikah_stone = 0 # 希卡之石模式 实际为flag = 10
         super_earth = 0 # 战备呼叫模式 实际为flag = 20
@@ -116,7 +116,9 @@ def display_test():
         change_flag2 = 0
         
         RTC_time = 0
+        temp_time = 0
         mag_time = 0
+        music_time = 0
 
         # 触摸控制
         tp = TOUCH(0)
@@ -884,12 +886,28 @@ def display_test():
                 RTC_time = 1
                 uart_data=bytes([0xaa, 0x55, 0x11, 0x01])
                 uart.write(uart_data)
+                data = uart.read(15)
+                if(data!=None and data[6]==0xaa):
+                    img.clear()
+                    img.draw_string_advanced(20, 120, 200, str(data[0]) + str(data[1])+ ':' + str(data[2]) + str(data[3])+ ':' + str(data[4]) + str(data[5]), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(240, 80, 100, str(data[7]) + str(data[8])+ '-' + str(data[11]) + str(data[12])+ '-' + str(data[13]) + str(data[14]), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(340, 340, 60, "星期" + str(data[10]), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                img.draw_string_advanced(160, 15, 60, "--现在的时间是--", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+            # 相机模式
+            if flag == 12:
+                flag = 1
+            # 光温模式
+            if flag == 13:
+                if temp_time == 0:
+                    img.clear()
+                temp_time = 1
+                uart_data=bytes([0xaa, 0x55, 0x13, 0x01])
+                uart.write(uart_data)
                 data = uart.read(7)
                 if(data!=None and data[-1]==0xaa):
                     img.clear()
-                    img.draw_string_advanced(20, 120, 200, str(data[0]) + str(data[1])+ ':' + str(data[2]) + str(data[3])+ ':' + str(data[4]) + str(data[5]), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-                img.draw_string_advanced(160, 15, 60, "--现在的时间是--", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-
+                    img.draw_string_advanced(20, 80, 140, "Temp:" + str(data[0]) + str(data[1]) + str(data[2]) + "\nLux:" + str(data[3]) + str(data[4]) + str(data[5]), color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")    
+                img.draw_string_advanced(20, 15, 60, "--现在的光照和温度(AD值)是--", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
             # 磁力探测模式
             if flag == 14:
                 if mag_time == 0:
@@ -905,7 +923,23 @@ def display_test():
                     img.clear()
                     img.draw_string_advanced(140, 100, 60, "~磁力宝可梦已经离开~", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
                     img.draw_string_advanced(70, 280, 50, "~请按返回键以使用其他功能~", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
-            
+            # 音乐播放器
+            if flag == 15:
+                if music_time == 0:
+                    img.clear()
+                    img.draw_string_advanced(20, 15, 60, "--按下STC上的K1播放音乐--", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                data = uart.read(3)
+                if(data!=None and data[2]==0x04):
+                    mag_time = 1
+                    img.clear()
+                    img.draw_string_advanced(220, 15, 60, "正在播放：", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(120, 100, 60, "!目标是宝可梦大师!", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                elif(data!=None and data[2]==0x05):
+                    img.clear()
+                    img.draw_string_advanced(220, 100, 60, "~播放暂停~", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                    img.draw_string_advanced(70, 280, 50, "~请按返回键以使用其他功能~", color=(255, 255, 255), font="/sdcard/res/font/ChillBitmap7x.ttf")
+                music_time = 1
+
             # 确认键
             if current_key_state5 == 0 and last_key_state5 == 1:
                 #初始界面
@@ -1022,8 +1056,6 @@ def display_test():
                         menu_collect = 4
                     elif menu_collect == 6:
                         menu_collect = 5
-
-
             # 下
             if current_key_state2 == 0 and last_key_state2 == 1:
                 if flag==-1:
@@ -1078,7 +1110,6 @@ def display_test():
                         menu_collect = 6
                     elif menu_collect == 6:
                         menu_collect = 6
-
             # 左
             if current_key_state3 == 0 and last_key_state3 == 1:
                 if flag==-1:
@@ -1191,6 +1222,8 @@ def display_test():
                     flag = 10
                     mag_time = 0
                     RTC_time = 0
+                    music_time = 0
+                    temp_time = 0
 
 
             last_key_state1 = current_key_state1

@@ -1,4 +1,4 @@
-C51 COMPILER V9.51   MAIN                                                                  09/18/2025 15:56:16 PAGE 1   
+C51 COMPILER V9.51   MAIN                                                                  09/19/2025 10:17:03 PAGE 1   
 
 
 C51 COMPILER V9.51, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
   52            0x6B, // Q (26): 01100111 (a,b,c,d,f,g亮，9多e)
   53            0x50, // R (27): 01010000 (a,b,f,g亮，简化版)
   54            0x6D, // S (28): 01101101 (同5)
-C51 COMPILER V9.51   MAIN                                                                  09/18/2025 15:56:16 PAGE 2   
+C51 COMPILER V9.51   MAIN                                                                  09/19/2025 10:17:03 PAGE 2   
 
   55            0x78, // T (29): 01111000 (f,g,e亮)
   56            0x3E, // U (30): 00111110 (b,c,d,e,f亮，类似0少a)
@@ -118,15 +118,15 @@ line level    source
  105            0x00, 0x10};
  106          struct_DS1302_RTC initTime = {
  107            0x00,
- 108            0x52,
- 109            0x17,
- 110            0x11,
+ 108            0x12,
+ 109            0x16,
+ 110            0x18,
  111            0x09,
  112            0x04,
  113            0x25};
  114          struct_DS1302_RTC currentTime;
  115          #define RECEIVE_LEN 5
-C51 COMPILER V9.51   MAIN                                                                  09/18/2025 15:56:16 PAGE 3   
+C51 COMPILER V9.51   MAIN                                                                  09/19/2025 10:17:03 PAGE 3   
 
  116          int count = 0;
  117          // Beep控制
@@ -140,7 +140,7 @@ line level    source
  125          // 串口控制
  126          char data_recieved[RECEIVE_LEN];
  127          char matched_data[] = {0xaa, 0x55};
- 128          char uart_data[10];
+ 128          char uart_data[20];
  129          void myUart2_callback()
  130          {
  131   1        char flag = data_recieved[2];
@@ -190,7 +190,7 @@ line level    source
  175   2            Seg7Print(42, 42, 12, 10, 22, 42, 42, 42);
  176   2          else if (menu_select == 0x03)
  177   2            Seg7Print(42, 42, 29, 14, 22, 25, 42, 42);
-C51 COMPILER V9.51   MAIN                                                                  09/18/2025 15:56:16 PAGE 4   
+C51 COMPILER V9.51   MAIN                                                                  09/19/2025 10:17:03 PAGE 4   
 
  178   2          else if (menu_select == 0x04)
  179   2            Seg7Print(42, 42, 22, 10, 16, 42, 42, 42);
@@ -223,177 +223,208 @@ line level    source
  206   2          uart_data[4] = dispData[6];
  207   2          uart_data[5] = dispData[7];
  208   2          uart_data[6] = 0xaa;
- 209   2          Uart2Print(uart_data, 7);
- 210   2          // 输出到数码管（8位显示）
- 211   2          Seg7Print(dispData[0], dispData[1], dispData[2], dispData[3],
- 212   2                dispData[4], dispData[5], dispData[6], dispData[7]);
- 213   2          LedPrint(0xFF);
- 214   2        }
- 215   1      }
- 216          void myKey_callback()
- 217          {
- 218   1        if (GetKeyAct(enumKey1) == enumKeyPress)
- 219   1        {
- 220   2          SetPlayerMode(enumModePlay);
- 221   2        }
- 222   1        if (GetKeyAct(enumKey2) == enumKeyPress)
- 223   1        {
- 224   2          SetPlayerMode(enumModePause);
- 225   2        }
- 226   1      }
- 227          void beep_check()
- 228          {
- 229   1        if (GetBeepStatus() == enumBeepFree && interp == 0)
- 230   1        {
- 231   2          a += 1;
- 232   2        }
- 233   1      
- 234   1        if (a > 4)
- 235   1        {
- 236   2          a = 0;
+ 209   2          uart_data[7] = (currentTime.year >> 4) & 0x0F;
+ 210   2          uart_data[8] = currentTime.year & 0x0F;
+ 211   2          uart_data[9] = (currentTime.week >> 4) & 0x0F;
+ 212   2          uart_data[10] = currentTime.week & 0x0F;
+ 213   2          uart_data[11] = (currentTime.month >> 4) & 0x0F;
+ 214   2          uart_data[12] = currentTime.month & 0x0F;
+ 215   2          uart_data[13] = (currentTime.day >> 4) & 0x0F;
+ 216   2          uart_data[14] = currentTime.day & 0x0F;
+ 217   2          Uart2Print(uart_data, 15);
+ 218   2          // 输出到数码管（8位显示）
+ 219   2          Seg7Print(dispData[0], dispData[1], dispData[2], dispData[3],
+ 220   2                dispData[4], dispData[5], dispData[6], dispData[7]);
+ 221   2          LedPrint(0xFF);
+ 222   2        }
+ 223   1        else if (flag == 0x13)
+ 224   1        {
+ 225   2          int lux = GetADC().Rop;
+ 226   2          int rt = GetADC().Rt;
+ 227   2      
+ 228   2          uart_data[0] = rt / 100 % 10;
+ 229   2          uart_data[1] = rt / 10 % 10;
+ 230   2          uart_data[2] = rt % 10;
+ 231   2          uart_data[3] = lux / 100 % 10;
+ 232   2          uart_data[4] = lux / 10 % 10;
+ 233   2          uart_data[5] = lux % 10;
+ 234   2          uart_data[6] = 0xaa;
+ 235   2          Uart2Print(uart_data, 7);
+ 236   2          Seg7Print(rt / 100 % 10, rt / 10 % 10, rt % 10, 0, 0, lux / 100 % 10, lux / 10 % 10, lux % 10);
  237   2        }
- 238   1      
- 239   1        if (interp == 0 && a == 1)
-C51 COMPILER V9.51   MAIN                                                                  09/18/2025 15:56:16 PAGE 5   
+ 238   1      }
+ 239          void myKey_callback()
+C51 COMPILER V9.51   MAIN                                                                  09/19/2025 10:17:03 PAGE 5   
 
- 240   1        {
- 241   2          SetBeep(523, 17);
- 242   2        }
- 243   1        else if (interp == 0 && a == 2)
- 244   1        {
- 245   2          SetBeep(587, 17);
- 246   2        }
- 247   1        else if (interp == 0 && a == 3)
- 248   1        {
- 249   2          SetBeep(659, 17);
- 250   2        }
- 251   1        else if (interp == 0 && a == 4)
- 252   1        {
- 253   2          SetBeep(784, 80);
- 254   2          interp = 1;
- 255   2        }
- 256   1      }
- 257          void myLED_callback()
- 258          {
- 259   1        // 初始界面
- 260   1        if (LEDmode == 1 && LEDchange == 1)
+ 240          {
+ 241   1        if (GetKeyAct(enumKey1) == enumKeyPress)
+ 242   1        {
+ 243   2          SetPlayerMode(enumModePlay);
+ 244   2          uart_data[0] = 0xaa;
+ 245   2          uart_data[1] = 0x55;
+ 246   2          uart_data[2] = 0x04;
+ 247   2          Uart2Print(uart_data, 3);
+ 248   2        }
+ 249   1        if (GetKeyAct(enumKey2) == enumKeyPress)
+ 250   1        {
+ 251   2          SetPlayerMode(enumModePause);
+ 252   2          uart_data[0] = 0xaa;
+ 253   2          uart_data[1] = 0x55;
+ 254   2          uart_data[2] = 0x05;
+ 255   2          Uart2Print(uart_data, 3);
+ 256   2        }
+ 257   1      }
+ 258          void beep_check()
+ 259          {
+ 260   1        if (GetBeepStatus() == enumBeepFree && interp == 0)
  261   1        {
- 262   2          LedPrint(0x55);
+ 262   2          a += 1;
  263   2        }
- 264   1        else if (LEDmode == 1 && LEDchange == -1)
- 265   1        {
- 266   2          LedPrint(0xaa);
- 267   2        }
- 268   1        else if (LEDmode == 2)
- 269   1        {
- 270   2          LedPrint(led_val);
- 271   2        }
- 272   1        else if (LEDmode == 3 && LEDchange == 1)
- 273   1        {
- 274   2          LedPrint(0xFF);
- 275   2        }
- 276   1        else if (LEDmode == 3 && LEDchange == -1)
- 277   1        {
- 278   2          LedPrint(0x00);
- 279   2        }
- 280   1        LEDchange *= -1;
- 281   1      
- 282   1        // 流水灯
- 283   1        if (led_val < 0x80 && led_flow_reverse == 1)
- 284   1        {
- 285   2          led_val = led_val << 1;
+ 264   1      
+ 265   1        if (a > 4)
+ 266   1        {
+ 267   2          a = 0;
+ 268   2        }
+ 269   1      
+ 270   1        if (interp == 0 && a == 1)
+ 271   1        {
+ 272   2          SetBeep(523, 17);
+ 273   2        }
+ 274   1        else if (interp == 0 && a == 2)
+ 275   1        {
+ 276   2          SetBeep(587, 17);
+ 277   2        }
+ 278   1        else if (interp == 0 && a == 3)
+ 279   1        {
+ 280   2          SetBeep(659, 17);
+ 281   2        }
+ 282   1        else if (interp == 0 && a == 4)
+ 283   1        {
+ 284   2          SetBeep(784, 80);
+ 285   2          interp = 1;
  286   2        }
- 287   1        else if (led_val > 0x01 && led_flow_reverse == -1)
- 288   1        {
- 289   2          led_val = led_val >> 1;
- 290   2        }
- 291   1        else if (led_val == 0x80 || led_val == 0x01)
+ 287   1      }
+ 288          void myLED_callback()
+ 289          {
+ 290   1        // 初始界面
+ 291   1        if (LEDmode == 1 && LEDchange == 1)
  292   1        {
- 293   2          led_flow_reverse *= -1;
+ 293   2          LedPrint(0x55);
  294   2        }
- 295   1      }
- 296          void my10mS_callback()
- 297          {
- 298   1        // Beep轮询
- 299   1        beep_check();
- 300   1      }
- 301          void myVib_callback()
-C51 COMPILER V9.51   MAIN                                                                  09/18/2025 15:56:16 PAGE 6   
+ 295   1        else if (LEDmode == 1 && LEDchange == -1)
+ 296   1        {
+ 297   2          LedPrint(0xaa);
+ 298   2        }
+ 299   1        else if (LEDmode == 2)
+ 300   1        {
+ 301   2          LedPrint(led_val);
+C51 COMPILER V9.51   MAIN                                                                  09/19/2025 10:17:03 PAGE 6   
 
- 302          {
- 303   1        char k = GetVibAct();
- 304   1        if (k == enumVibQuake)
- 305   1        {
- 306   2          uart_data[0] = 0xaa;
- 307   2          uart_data[1] = 0x55;
- 308   2          uart_data[2] = 0x01;
- 309   2          Uart2Print(uart_data, 3);
+ 302   2        }
+ 303   1        else if (LEDmode == 3 && LEDchange == 1)
+ 304   1        {
+ 305   2          LedPrint(0xFF);
+ 306   2        }
+ 307   1        else if (LEDmode == 3 && LEDchange == -1)
+ 308   1        {
+ 309   2          LedPrint(0x00);
  310   2        }
- 311   1      }
- 312          void myHall_callback()
- 313          {
- 314   1        char k = GetHallAct();
- 315   1        if (k == enumHallGetClose)
- 316   1        {
- 317   2          uart_data[0] = 0xaa;
- 318   2          uart_data[1] = 0x55;
- 319   2          uart_data[2] = 0x02;
- 320   2          Uart2Print(uart_data, 3);
- 321   2          // Beep
- 322   2          interp = 0;
- 323   2        }
- 324   1        else if (k == enumHallGetAway)
- 325   1        {
- 326   2          uart_data[0] = 0xaa;
- 327   2          uart_data[1] = 0x55;
- 328   2          uart_data[2] = 0x03;
- 329   2          Uart2Print(uart_data, 3);
- 330   2        }
+ 311   1        LEDchange *= -1;
+ 312   1      
+ 313   1        // 流水灯
+ 314   1        if (led_val < 0x80 && led_flow_reverse == 1)
+ 315   1        {
+ 316   2          led_val = led_val << 1;
+ 317   2        }
+ 318   1        else if (led_val > 0x01 && led_flow_reverse == -1)
+ 319   1        {
+ 320   2          led_val = led_val >> 1;
+ 321   2        }
+ 322   1        else if (led_val == 0x80 || led_val == 0x01)
+ 323   1        {
+ 324   2          led_flow_reverse *= -1;
+ 325   2        }
+ 326   1      }
+ 327          void my10mS_callback()
+ 328          {
+ 329   1        // Beep轮询
+ 330   1        beep_check();
  331   1      }
- 332          
- 333          void main()
- 334          {
- 335   1        Uart2Init(115200, Uart2UsedforEXT);
- 336   1        displayerInit();
-*** WARNING C206 IN LINE 336 OF main.c: 'displayerInit': missing function-prototype
- 337   1        keyInit();
-*** WARNING C206 IN LINE 337 OF main.c: 'keyInit': missing function-prototype
- 338   1        VibInit();
- 339   1        MusicPlayerInit();
- 340   1        BeepInit();
- 341   1        HallInit();
- 342   1        SetDisplayerArea(0, 7);
- 343   1        DS1302Init(initTime);
- 344   1        RTC_Write(initTime);
- 345   1      
- 346   1        SetUart2Rxd(data_recieved, RECEIVE_LEN, matched_data, 2);
- 347   1      
- 348   1        SetMusic(90, 0xFA, pokemon_get_DAZE, sizeof(pokemon_get_DAZE), enumMscDrvLed);
- 349   1      
- 350   1        SetEventCallBack(enumEventHall, myHall_callback);
- 351   1        SetEventCallBack(enumEventVib, myVib_callback);
- 352   1        SetEventCallBack(enumEventKey, myKey_callback);
- 353   1        SetEventCallBack(enumEventUart2Rxd, myUart2_callback);
- 354   1        SetEventCallBack(enumEventSys1S, myDisplay_callback);
- 355   1        SetEventCallBack(enumEventSys100mS, myLED_callback);
- 356   1        SetEventCallBack(enumEventSys10mS, my10mS_callback);
- 357   1      
- 358   1        MySTC_Init();
- 359   1        while (1)
- 360   1        {
- 361   2          MySTC_OS();
-C51 COMPILER V9.51   MAIN                                                                  09/18/2025 15:56:16 PAGE 7   
+ 332          void myVib_callback()
+ 333          {
+ 334   1        char k = GetVibAct();
+ 335   1        if (k == enumVibQuake)
+ 336   1        {
+ 337   2          uart_data[0] = 0xaa;
+ 338   2          uart_data[1] = 0x55;
+ 339   2          uart_data[2] = 0x01;
+ 340   2          Uart2Print(uart_data, 3);
+ 341   2        }
+ 342   1      }
+ 343          void myHall_callback()
+ 344          {
+ 345   1        char k = GetHallAct();
+ 346   1        if (k == enumHallGetClose)
+ 347   1        {
+ 348   2          uart_data[0] = 0xaa;
+ 349   2          uart_data[1] = 0x55;
+ 350   2          uart_data[2] = 0x02;
+ 351   2          Uart2Print(uart_data, 3);
+ 352   2          // Beep
+ 353   2          interp = 0;
+ 354   2        }
+ 355   1        else if (k == enumHallGetAway)
+ 356   1        {
+ 357   2          uart_data[0] = 0xaa;
+ 358   2          uart_data[1] = 0x55;
+ 359   2          uart_data[2] = 0x03;
+ 360   2          Uart2Print(uart_data, 3);
+ 361   2        }
+ 362   1      }
+ 363          
+C51 COMPILER V9.51   MAIN                                                                  09/19/2025 10:17:03 PAGE 7   
 
- 362   2        }
- 363   1      }
+ 364          void main()
+ 365          {
+ 366   1        Uart2Init(115200, Uart2UsedforEXT);
+ 367   1        displayerInit();
+*** WARNING C206 IN LINE 367 OF main.c: 'displayerInit': missing function-prototype
+ 368   1        keyInit();
+*** WARNING C206 IN LINE 368 OF main.c: 'keyInit': missing function-prototype
+ 369   1        VibInit();
+ 370   1        MusicPlayerInit();
+ 371   1        BeepInit();
+ 372   1        HallInit();
+ 373   1        SetDisplayerArea(0, 7);
+ 374   1        DS1302Init(initTime);
+ 375   1        AdcInit(ADCexpEXT);
+ 376   1      
+ 377   1        SetUart2Rxd(data_recieved, RECEIVE_LEN, matched_data, 2);
+ 378   1      
+ 379   1        SetMusic(90, 0xFA, pokemon_get_DAZE, sizeof(pokemon_get_DAZE), enumMscDrvLed);
+ 380   1      
+ 381   1        SetEventCallBack(enumEventHall, myHall_callback);
+ 382   1        SetEventCallBack(enumEventVib, myVib_callback);
+ 383   1        SetEventCallBack(enumEventKey, myKey_callback);
+ 384   1        SetEventCallBack(enumEventUart2Rxd, myUart2_callback);
+ 385   1        SetEventCallBack(enumEventSys1S, myDisplay_callback);
+ 386   1        SetEventCallBack(enumEventSys100mS, myLED_callback);
+ 387   1        SetEventCallBack(enumEventSys10mS, my10mS_callback);
+ 388   1      
+ 389   1        MySTC_Init();
+ 390   1        while (1)
+ 391   1        {
+ 392   2          MySTC_OS();
+ 393   2        }
+ 394   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1214    ----
+   CODE SIZE        =   1587    ----
    CONSTANT SIZE    =    338    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =     44      13
+   DATA SIZE        =     54      13
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.

@@ -105,9 +105,9 @@ code char pokemon_get_DAZE[] = {
 	0x00, 0x10};
 struct_DS1302_RTC initTime = {
 	0x00,
-	0x52,
-	0x17,
-	0x11,
+	0x12,
+	0x16,
+	0x18,
 	0x09,
 	0x04,
 	0x25};
@@ -125,7 +125,7 @@ int led_flow_reverse = 1;
 // 串口控制
 char data_recieved[RECEIVE_LEN];
 char matched_data[] = {0xaa, 0x55};
-char uart_data[10];
+char uart_data[20];
 void myUart2_callback()
 {
 	char flag = data_recieved[2];
@@ -206,11 +206,34 @@ void myDisplay_callback()
 		uart_data[4] = dispData[6];
 		uart_data[5] = dispData[7];
 		uart_data[6] = 0xaa;
-		Uart2Print(uart_data, 7);
+		uart_data[7] = (currentTime.year >> 4) & 0x0F;
+		uart_data[8] = currentTime.year & 0x0F;
+		uart_data[9] = (currentTime.week >> 4) & 0x0F;
+		uart_data[10] = currentTime.week & 0x0F;
+		uart_data[11] = (currentTime.month >> 4) & 0x0F;
+		uart_data[12] = currentTime.month & 0x0F;
+		uart_data[13] = (currentTime.day >> 4) & 0x0F;
+		uart_data[14] = currentTime.day & 0x0F;
+		Uart2Print(uart_data, 15);
 		// 输出到数码管（8位显示）
 		Seg7Print(dispData[0], dispData[1], dispData[2], dispData[3],
 				  dispData[4], dispData[5], dispData[6], dispData[7]);
 		LedPrint(0xFF);
+	}
+	else if (flag == 0x13)
+	{
+		int lux = GetADC().Rop;
+		int rt = GetADC().Rt;
+
+		uart_data[0] = rt / 100 % 10;
+		uart_data[1] = rt / 10 % 10;
+		uart_data[2] = rt % 10;
+		uart_data[3] = lux / 100 % 10;
+		uart_data[4] = lux / 10 % 10;
+		uart_data[5] = lux % 10;
+		uart_data[6] = 0xaa;
+		Uart2Print(uart_data, 7);
+		Seg7Print(rt / 100 % 10, rt / 10 % 10, rt % 10, 0, 0, lux / 100 % 10, lux / 10 % 10, lux % 10);
 	}
 }
 void myKey_callback()
@@ -218,10 +241,18 @@ void myKey_callback()
 	if (GetKeyAct(enumKey1) == enumKeyPress)
 	{
 		SetPlayerMode(enumModePlay);
+		uart_data[0] = 0xaa;
+		uart_data[1] = 0x55;
+		uart_data[2] = 0x04;
+		Uart2Print(uart_data, 3);
 	}
 	if (GetKeyAct(enumKey2) == enumKeyPress)
 	{
 		SetPlayerMode(enumModePause);
+		uart_data[0] = 0xaa;
+		uart_data[1] = 0x55;
+		uart_data[2] = 0x05;
+		Uart2Print(uart_data, 3);
 	}
 }
 void beep_check()
@@ -341,7 +372,7 @@ void main()
 	HallInit();
 	SetDisplayerArea(0, 7);
 	DS1302Init(initTime);
-	RTC_Write(initTime);
+	AdcInit(ADCexpEXT);
 
 	SetUart2Rxd(data_recieved, RECEIVE_LEN, matched_data, 2);
 
